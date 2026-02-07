@@ -1,97 +1,56 @@
 import streamlit as st
-import pandas as pd
-from datetime import date
+import datetime
 
-# 1. 페이지 기본 설정
-st.set_page_config(page_title="ER 근무 조회 시스템", page_icon="📅", layout="wide")
+st.set_page_config(page_title="ER 근무 조회", page_icon="📅")
 
-@st.cache_data
-def load_and_clean_data():
+# 1. 데이터 읽기
+def get_data():
+    data = []
     try:
-        # 데이터 로드
-        df = pd.read_csv("duty_data.csv")
+        with open("duty_data.csv", "r", encoding="utf-8") as f:
+            for line in f:
+                # 쉼표로 나누고 앞뒤 공백 제거
+                data.append([item.strip() for item in line.split(",")])
+    except:
+        st.error("duty_data.csv 파일을 확인해주세요.")
+    return data
+
+duty_list = get_data()
+
+# 2. 화면 구성
+st.title("📅 ER 근무 조회")
+selected_date = st.date_input("날짜 선택", datetime.date.today())
+day = selected_date.day
+
+if duty_list:
+    # 근무자 담을 리스트
+    d, e, n, edu = [], [], [], []
+
+    # 3. 데이터 분류 (첫 줄 헤더 제외)
+    for row in duty_list[1:]:
+        if len(row) <= day: continue
         
-        # [방어 로직 1] 컬럼명 앞뒤 공백 제거 (날짜 ' 8' 등 오타 방지)
-        df.columns = [str(col).strip() for col in df.columns]
+        name = row[0]   # 이름
+        work = row[day] # 해당 날짜 근무
         
-        # [방어 로직 2] 데이터 내용 앞뒤 공백 제거 (' D' 등 오타 방지)
-        df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
-        
-        return df
-    except Exception as e:
-        st.error(f"데이터 파일을 읽는 중 오류가 발생했습니다: {e}")
-        return None
+        if work == 'D' or (name == '홍민정' and work == 'H'): d.append(name)
+        elif work == 'E': e.append(name)
+        elif work == 'N': n.append(name)
+        elif work == '교': edu.append(name)
 
-df = load_and_clean_data()
+    # 4. 결과 출력
+    st.subheader(f"🔍 {selected_date.month}월 {day}일 명단")
+    c1, c2, c3 = st.columns(3)
+    
+    with c1:
+        st.success("☀️ Day")
+        for i, val in enumerate(d, 1): st.write(f"{i}. {val}")
+    with c2:
+        st.warning("⛅ Evening")
+        for i, val in enumerate(e, 1): st.write(f"{i}. {val}")
+    with c3:
+        st.error("🌙 Night")
+        for i, val in enumerate(n, 1): st.write(f"{i}. {val}")
 
-# 제목 섹션
-st.title("📅 ER 비외상 근무 현황")
-st.info("CSV 파일의 '성명' 열과 '날짜(1~28)' 열을 대조하여 근무자를 표시합니다.")
-
-if df is not None:
-    # 2. 날짜 선택
-    selected_date = st.date_input("조회할 날짜를 선택하세요", value=date(today=True))
-    target_day = str(selected_date.day) # 선택한 '일'을 문자열로 변환
-
-    if target_day in df.columns:
-        # 3. 근무자 분류 리스트
-        day_workers = []
-        evening_workers = []
-        night_workers = []
-        edu_workers = []
-
-        # 4. 데이터 분석 (한 줄씩 검사)
-        for i, row in df.iterrows():
-            name = str(row['성명'])   # '성명' 컬럼에서 이름 추출
-            duty = str(row[target_day]) # 선택한 날짜 컬럼에서 근무 기호 추출
-
-            # [핵심 로직] 근무 기호에 따른 분류
-            # 홍민정 선생님의 'H'는 Day(D)로 간주하는 예외 처리 포함
-            if duty == 'D' or (name == '홍민정' and duty == 'H'):
-                day_workers.append(name)
-            elif duty == 'E':
-                evening_workers.append(name)
-            elif duty == 'N':
-                night_workers.append(name)
-            elif duty == '교':
-                edu_workers.append(name)
-
-        # 5. 화면 출력
-        st.subheader(f"🔍 {selected_date.month}월 {target_day}일 근무 명단")
-        
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.success("☀️ **DAY**")
-            if day_workers:
-                for idx, name in enumerate(day_workers, 1):
-                    st.write(f"**{idx}. {name}**") # 이름이 굵게 표시됨
-            else:
-                st.write("근무자 없음")
-
-        with col2:
-            st.warning("⛅ **EVENING**")
-            if evening_workers:
-                for idx, name in enumerate(evening_workers, 1):
-                    st.write(f"**{idx}. {name}**")
-            else:
-                st.write("근무자 없음")
-
-        with col3:
-            st.error("🌙 **NIGHT**")
-            if night_workers:
-                for idx, name in enumerate(night_workers, 1):
-                    st.write(f"**{idx}. {name}**")
-            else:
-                st.write("근무자 없음")
-
-        # 교육 인원 별도 표시
-        if edu_workers:
-            st.divider()
-            st.write(f"📝 **교육(교):** {', '.join(edu_workers)}")
-            
-    else:
-        st.error(f"데이터 파일에 '{target_day}'일 컬럼이 없습니다. CSV 헤더를 확인해주세요.")
-
-# 하단 도움말
-st.caption("※ 홍민정 선생님의 'H' 근무는 Day 명단에 포함되어 표시됩니다.")
+    if edu:
+        st.info(f"📝 교육: {', '.join(edu)}")
