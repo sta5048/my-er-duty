@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 
-# 1. 원본 데이터 (선생님 요청에 따라 '연'은 'OF'로 미리 치환함)
+# 데이터 정리 (연->OF 변경 완료)
 csv_data = """성명,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28
 홍민정,OF,D,D,D,출연,D,OF,D,D,D,D,D,D,OF,OF,H,H,H,D,D,OF,OF,D,D,D,D,D,OF
 허유미,D,D,D,D,OF,D,E,E,E,OF,OF,D,D,OF,OF,OF,D,D,D,OF,OF,E,E,E,OF,E,E,E
@@ -40,48 +40,30 @@ df = pd.read_csv(io.StringIO(csv_data))
 st.set_page_config(page_title="ER 근무 조회", layout="wide")
 st.title("🏥 2월 비외상 근무 조회 시스템")
 
-# 선생님의 듀티 입력 (예: ENNOOFF...)
-my_duty_input = st.text_input("나의 2월 듀티 시퀀스를 입력하세요 (예: DDEEOOFF...)", "")
+# 사용자 입력
+my_duty_input = st.text_input("나의 2월 듀티를 순서대로 입력하세요 (예: DDEEOOFF...)", "")
 
 if my_duty_input:
-    # 입력한 듀티를 리스트로 변환 (대문자 처리 및 공백 제거)
     my_duties = list(my_duty_input.upper().replace(" ", ""))
-    
     st.divider()
     
-    # 2월은 28일까지이므로 입력된 값 중 28개까지만 확인
     for i, duty in enumerate(my_duties):
         day_num = i + 1
         if day_num > 28: break
-        
         day_col = str(day_num)
         
-        # 1. 해당 날짜 '교육(교)' 인원 찾기
+        # 교육 인원
         edu_workers = df[df[day_col] == '교']['성명'].tolist()
         
-        # 2. 나와 같은 듀티 동료 찾기
-        # (선생님이 O 또는 OF로 입력했을 때 모두 매칭되도록 처리)
+        # 동료 찾기
         search_duty = "OF" if duty in ["O", "OF"] else duty
         coworkers = df[df[day_col] == search_duty]['성명'].tolist()
         
-        # 화면 출력
         with st.expander(f"📅 2월 {day_num}일 ({duty})"):
-            col1, col2 = st.columns(2)
-            
-            with col1:
+            c1, c2 = st.columns(2)
+            with c1:
                 st.write("**👨‍⚕️ 같은 듀티 동료**")
-                if coworkers:
-                    st.success(", ".join(coworkers))
-                else:
-                    st.write("없음")
-            
-            with col2:
+                st.success(", ".join(coworkers)) if coworkers else st.write("없음")
+            with c2:
                 st.write("**📝 비고 (교육)**")
-                if edu_workers:
-                    # 요청하신 "교육: 아무개" 형식으로 표시
-                    st.info(f"교육: {', '.join(edu_workers)}")
-                else:
-                    st.write("-")
-
-else:
-    st.info("상단 입력창에 이번 달 듀티를 순서대로 입력하면 날짜별 동료와 교육 인원을 확인할 수 있습니다.")
+                st.info(f"교육: {', '.join(edu_workers)}") if edu_workers else st.write("-")
