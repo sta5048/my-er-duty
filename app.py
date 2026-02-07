@@ -22,8 +22,8 @@ selected_date = st.date_input("날짜 선택", datetime.date.today())
 day = selected_date.day
 
 if duty_list:
-    # 근무자 리스트 (Day, Evening, Night)
-    d, e, n = [], [], []
+    # 근무자 리스트 (Day, Evening, Night, Special)
+    d, e, n, s_worker = [], [], [], []
 
     # 3. 데이터 매칭 (첫 줄 제외)
     for row in duty_list[1:]:
@@ -32,11 +32,13 @@ if duty_list:
             if work == 'D': d.append(name)
             elif work == 'E': e.append(name)
             elif work == 'N': n.append(name)
+            elif work == 'S': s_worker.append(name) # S근무자 수집
 
     # 4. 결과 출력
     st.subheader(f"🔍 {selected_date.month}월 {day}일 명단")
     cols = st.columns(3)
     
+    # D, E, N 출력
     for col, title, names, color in zip(cols, ["☀️ Day", "⛅ Eve", "🌙 Night"], [d, e, n], ["green", "orange", "red"]):
         with col:
             st.markdown(f"### :{color}[{title}]")
@@ -45,3 +47,9 @@ if duty_list:
                     st.write(f"{i}. {name}")
             else:
                 st.write("-")
+            
+            # Day 컬럼 가장 아래에 S근무자 표시
+            if title == "☀️ Day" and s_worker:
+                st.write("---") # 구분선
+                for name in s_worker:
+                    st.write(f"🚩 **S근무자: {name}**")
