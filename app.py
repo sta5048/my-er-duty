@@ -27,19 +27,16 @@ duty_list = load_duty(selected_date)
 
 if duty_list:
     d, e, n, s_worker = [], [], [], []
-    hmj_special = None  # 홍민정 선생님 특수 근무 저장용
+    hmj_special = None
 
     for row in duty_list[1:]:
         if len(row) > day:
             name, work = row[0], row[day]
-            
-            # 1. 기본 근무 분류
             if work == 'D': d.append(name)
             elif work == 'E': e.append(name)
             elif work == 'N': n.append(name)
             elif work == 'S': s_worker.append(name)
             
-            # 2. 홍민정 선생님 특수 근무 체크 (D, E, N, S가 아닌 경우)
             if name == '홍민정' and work not in ['D', 'E', 'N', 'S', 'OF']:
                 hmj_special = work
 
@@ -50,21 +47,17 @@ if duty_list:
         with col:
             st.markdown(f"### :{color}[{title}]")
             
-            # Day 컬럼인 경우 상단에 S근무자 및 홍민정 특수근무 표시
+            # Day 섹션 상단 밀착 표시
             if title == "☀️ Day":
                 if s_worker:
                     for name in s_worker:
-                        st.write(f"🚩 **S근무자: {name}**")
-                
+                        st.write(f"🚩 **S: {name}**") # 문구를 짧게 줄여 더 밀착시킴
                 if hmj_special:
                     st.write(f"✨ **홍민정: {hmj_special}**")
-                
-                if s_worker or hmj_special:
-                    st.write("---") # 구분선
 
-            # 일반 명단 출력
+            # 일반 명단
             if names:
                 for i, name in enumerate(names, 1):
                     st.write(f"{i}. {name}")
-            else:
+            elif not s_worker and not hmj_special and not names:
                 st.write("-")
