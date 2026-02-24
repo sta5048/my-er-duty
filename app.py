@@ -4,12 +4,14 @@ import os
 
 st.set_page_config(page_title="ER 근무 조회", layout="wide")
 
-# CSS를 사용하여 화면이 좁아져도 강제로 가로 배치를 유지하게 만듭니다.
+# CSS: 모바일에서도 가로 배치를 강제하고 폰트 크기를 살짝 조절함
 st.markdown("""
     <style>
-    [data-testid="column"] {
-        min-width: 150px !important;
-    }
+    .main-container { display: flex; gap: 10px; width: 100%; }
+    .team-box { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
+    .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
+    .name-text { font-size: 0.9rem; margin-bottom: 2px; }
+    .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -43,30 +45,36 @@ if duty_list:
             elif work == 'S': target["S"].append(clean_name)
             elif "홍민정" in clean_name and work != 'OF': target["hmj"] = work
 
-    # 메인 화면을 비외상/외상으로 크게 나눕니다.
-    # gap="small"을 주어 공간 낭비를 줄입니다.
-    main_cols = st.columns(2, gap="medium")
+    # HTML을 이용한 좌우 강제 배치
+    left_html = ""
+    right_html = ""
 
-    for i, team_label in enumerate(["비외상", "외상"]):
-        with main_cols[i]:
-            st.subheader(f"🏥 {team_label}")
-            t_data = teams[team_label]
-            
-            # D, E, N 열을 더 촘촘하게 배치
-            d_col, e_col, n_col = st.columns(3)
-            
-            with d_col:
-                st.markdown("### :green[D]")
-                if t_data["S"]:
-                    for s in t_data["S"]: st.write(f"🚩**S:{s}**")
-                if t_data["hmj"]: st.write(f"✨**홍민정:{t_data['hmj']}**")
-                for j, n in enumerate(t_data["D"], 1): st.write(f"{j}.{n}")
-                
-            with e_col:
-                st.markdown("### :orange[E]")
-                for j, n in enumerate(t_data["E"], 1): st.write(f"{j}.{n}")
-                
-            with n_col:
-                st.markdown("### :red[N]")
-                for j, n in enumerate(t_data["N"], 1): st.write(f"{j}.{n}")
-            st.divider()
+    for team_label, side_html in [("비외상", "left"), ("외상", "right")]:
+        t = teams[team_label]
+        content = f"<div class='team-box'><h4>🏥 {team_label}</h4>"
+        
+        # Day
+        content += "<p class='duty-title D'>Day</p>"
+        if t["S"]: content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
+        if t["hmj"]: content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
+        
+        # Eve
+        content += "<p class='duty-title E'>Eve</p>"
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
+        
+        # Night
+        content += "<p class='duty-title N'>Night</p>"
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
+        
+        content += "</div>"
+        if side_html == "left": left_html = content
+        else: right_html = content
+
+    # 최종 결과 출력
+    st.markdown(f"""
+        <div class='main-container'>
+            {left_html}
+            {right_html}
+        </div>
+        """, unsafe_allow_html=True)
