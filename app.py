@@ -4,34 +4,49 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 모바일에서도 절대 줄바꿈 되지 않도록 강제 설정
+# CSS: 글자 크기를 확 줄여서 한 화면에 쑤셔넣기
 st.markdown("""
     <style>
+    /* 전체 배경 및 폰트 설정 */
+    html, body, [data-testid="stAppViewContainer"] {
+        font-size: 12px !important;
+    }
+    
+    /* 가로 배치 강제 */
     [data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        gap: 5px !important;
+        gap: 2px !important;
     }
     [data-testid="column"] {
         flex: 1 !important;
         min-width: 0px !important;
     }
+
+    /* 버튼: 글자 크기 최소화 */
     div.stButton > button {
         width: 100%;
-        padding: 5px 0px !important;
-        font-size: 13px !important;
+        padding: 2px 0px !important;
+        font-size: 11px !important;
+        height: 35px !important;
         white-space: nowrap;
     }
+
+    /* 근무표 박스: 여백 최소화 */
     .team-box { 
         border: 1px solid #ddd; 
-        padding: 8px; 
-        border-radius: 5px; 
+        padding: 4px; 
+        border-radius: 4px; 
         background-color: #ffffff;
     }
-    .duty-title { font-size: 0.95rem; font-weight: bold; margin-top: 8px; margin-bottom: 2px; }
-    .name-text { font-size: 0.85rem; margin-bottom: 1px; }
+    .team-title { font-size: 12px; font-weight: bold; margin-bottom: 4px; display: block;}
+    .duty-title { font-size: 11px; font-weight: bold; margin-top: 4px; margin-bottom: 0px; }
+    .name-text { font-size: 10.5px; margin-bottom: 0px; line-height: 1.2; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
+    
+    /* 날짜 선택기 크기 조절 */
+    div[data-testid="stDateInput"] { width: 100% !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -41,33 +56,32 @@ def load_duty(selected_date):
     with open(filename, "r", encoding="utf-8") as f:
         return [line.strip().split(",") for line in f if line.strip()]
 
-st.title("📅 ER 근무 조회")
+st.title("📅 ER 근무")
 
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# 버튼 영역 (어제, 오늘, 내일 한 줄 배치)
+# 버튼 3개
 b1, b2, b3 = st.columns(3)
 with b1:
-    if st.button("⬅️ 어제"):
+    if st.button("⬅️어제"):
         st.session_state.target_date -= datetime.timedelta(days=1)
         st.rerun()
 with b2:
-    if st.button("오늘 📍"):
+    if st.button("오늘📍"):
         st.session_state.target_date = datetime.date.today()
         st.rerun()
 with b3:
-    if st.button("내일 ➡️"):
+    if st.button("내일➡️"):
         st.session_state.target_date += datetime.timedelta(days=1)
         st.rerun()
 
-selected_date = st.date_input("날짜 선택", st.session_state.target_date)
+selected_date = st.date_input("날짜", st.session_state.target_date)
 st.session_state.target_date = selected_date
 
 day = selected_date.day
 duty_list = load_duty(selected_date)
 
-# --- 여기서부터 들여쓰기가 매우 중요합니다 ---
 if duty_list:
     teams = {"비외상": {"D":[], "E":[], "N":[], "S":[], "hmj":None}, 
              "외상": {"D":[], "E":[], "N":[], "S":[], "hmj":None}}
@@ -89,23 +103,15 @@ if duty_list:
     for label, col in [("비외상", c1), ("외상", c2)]:
         with col:
             t = teams[label]
-            st.markdown(f"<div class='team-box'><b>🏥 {label}</b>", unsafe_allow_html=True)
+            st.markdown(f"<div class='team-box'><span class='team-title'>🏥{label}</span>", unsafe_allow_html=True)
             for shift, s_name in [("D", "Day"), ("E", "Eve"), ("N", "Night")]:
                 st.markdown(f"<p class='duty-title {shift}'>{s_name}</p>", unsafe_allow_html=True)
                 if shift == "D":
                     if t["S"]:
                         for s in t["S"]: st.markdown(f"<p class='name-text'>🚩<b>S:{s}</b></p>", unsafe_allow_html=True)
-                    if t["hmj"]: st.markdown(f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>", unsafe_allow_html=True)
+                    if t["hmj"]: st.markdown(f"<p class='name-text'>✨<b>홍:{t['hmj']}</b></p>", unsafe_allow_html=True)
                 for i, name in enumerate(t[shift]):
-                    st.markdown(f"<p class='name-text'>{i+1}. {name}</p>", unsafe_allow_html=True)
+                    st.markdown(f"<p class='name-text'>{i+1}.{name}</p>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
-
 else:
-    # 이 else는 반드시 if duty_list와 세로 줄이 맞아야 합니다.
-    st.error(f"⚠️ {selected_date.year}년 {selected_date.month}월 데이터가 없습니다.")    # 최종 결과: 근무표도 flex-container를 사용하여 배치
-    st.markdown(f"""
-        <div class="flex-container">
-            <div class="flex-item">{left_html}</div>
-            <div class="flex-item">{right_html}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    st.error("데이터 없음")
