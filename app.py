@@ -15,9 +15,7 @@ st.markdown("""
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
     
-    /* 버튼 가로 배치 강제 전용 스타일 */
-    .row-container { display: flex; gap: 10px; margin-bottom: 10px; }
-    .row-container > div { flex: 1; }
+    /* 버튼 스타일 */
     .stButton > button { width: 100%; }
     </style>
     """, unsafe_allow_html=True)
@@ -34,8 +32,7 @@ st.title("📅 을지 ER 근무")
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# HTML 컨테이너를 먼저 선언하고 그 안에 버튼을 배치 (가로 배치 강제)
-st.markdown('<div class="row-container">', unsafe_allow_html=True)
+# ✅ 여기만 수정됨 (div 제거 + columns만 사용)
 col1, col2 = st.columns(2)
 with col1:
     if st.button("⬅️ 전날", use_container_width=True):
@@ -45,7 +42,6 @@ with col2:
     if st.button("다음날 ➡️", use_container_width=True):
         st.session_state.target_date += datetime.timedelta(days=1)
         st.rerun()
-st.markdown('</div>', unsafe_allow_html=True)
 
 # 날짜 선택기
 selected_date = st.date_input("날짜 직접 선택", value=st.session_state.target_date)
