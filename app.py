@@ -78,11 +78,4 @@ if duty_list:
             {right_html}
         </div>
         """, unsafe_allow_html=True)
-내가 작성한 타이틀이랑 앱에 뜨는 타이틀이 왜 달라?                if t["S"]: html_content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
-                if t["hmj"]: html_content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
-            html_content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t[code])])
-        html_content += "</div>"
-    html_content += "</div>"
-    st.markdown(html_content, unsafe_allow_html=True)
-else:
-    st.warning(f"{current_date.year}년 {current_date.month:02d}월 데이터 없음")
+내가 작성한 타이틀이랑 앱에 뜨는 타이틀이 왜 달라?
