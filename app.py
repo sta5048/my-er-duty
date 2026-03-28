@@ -4,19 +4,36 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 결과 박스와 버튼 모두 flex를 사용하여 가로 배치 강제
+# CSS
 st.markdown("""
     <style>
-    /* 결과 박스 가로 배치 */
     .main-container { display: flex; gap: 10px; width: 100%; }
     .team-box { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
     
     .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
-    
-    /* 버튼 스타일 */
-    .stButton > button { width: 100%; }
+
+    /* ✅ 버튼 예쁘게 */
+    .nav-btn {
+        flex: none;
+        padding: 8px 16px;
+        font-size: 14px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        background-color: white;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .nav-btn:hover {
+        background-color: #f1f3f5;
+    }
+    .btn-container {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -28,20 +45,20 @@ def load_duty(selected_date):
 
 st.title("📅 을지 ER 근무")
 
-# --- 날짜 조절 로직 ---
+# --- 날짜 조절 ---
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
-# 버튼 가로 고정 (HTML + JS)
+
+# ✅ 버튼 (작고 가운데 정렬)
 st.markdown(f"""
-<div style="display:flex; gap:10px;">
-    <button onclick="window.location.href='?date=prev'" style="flex:1; padding:10px;">⬅️ 전날</button>
-    <button onclick="window.location.href='?date=next'" style="flex:1; padding:10px;">다음날 ➡️</button>
+<div class="btn-container">
+    <button class="nav-btn" onclick="window.location.href='?date=prev'">⬅️ 전날</button>
+    <button class="nav-btn" onclick="window.location.href='?date=next'">다음날 ➡️</button>
 </div>
 """, unsafe_allow_html=True)
 
-# 쿼리 파라미터로 날짜 변경 처리
+# 쿼리 처리
 query = st.query_params
-
 if "date" in query:
     if query["date"] == "prev":
         st.session_state.target_date -= datetime.timedelta(days=1)
@@ -50,7 +67,7 @@ if "date" in query:
     st.query_params.clear()
     st.rerun()
 
-# 날짜 선택기
+# 날짜 선택
 selected_date = st.date_input("날짜 직접 선택", value=st.session_state.target_date)
 if selected_date != st.session_state.target_date:
     st.session_state.target_date = selected_date
@@ -60,7 +77,7 @@ current_date = st.session_state.target_date
 day = current_date.day
 duty_list = load_duty(current_date)
 
-# --- 근무표 출력 로직 ---
+# --- 근무표 ---
 if duty_list:
     teams = {
         "비외상": {"D": [], "E": [], "N": [], "S": [], "hmj": None},
@@ -101,7 +118,6 @@ if duty_list:
         if side_html == "left": left_html = content
         else: right_html = content
 
-    # 최종 결과 출력
     st.markdown(f"""
         <div class='main-container'>
             {left_html}
