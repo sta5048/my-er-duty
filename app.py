@@ -14,25 +14,29 @@ st.markdown("""
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
 
-    /* ✅ 버튼 예쁘게 */
-    .nav-btn {
-        flex: none;
-        padding: 8px 16px;
+    /* ✅ 상단 고정 */
+    .fixed-nav {
+        position: fixed;
+        top: 70px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        z-index: 9999;
+    }
+
+    /* 버튼 크기 */
+    .stButton > button {
+        padding: 6px 14px;
         font-size: 14px;
         border-radius: 8px;
-        border: 1px solid #ddd;
-        background-color: white;
-        cursor: pointer;
-        transition: all 0.2s;
+        width: auto;
     }
-    .nav-btn:hover {
-        background-color: #f1f3f5;
-    }
-    .btn-container {
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-        margin-bottom: 10px;
+
+    /* 본문 안 가려지게 */
+    .block-container {
+        padding-top: 120px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -49,23 +53,22 @@ st.title("📅 을지 ER 근무")
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# ✅ 버튼 (작고 가운데 정렬)
-st.markdown(f"""
-<div class="btn-container">
-    <button class="nav-btn" onclick="window.location.href='?date=prev'">⬅️ 전날</button>
-    <button class="nav-btn" onclick="window.location.href='?date=next'">다음날 ➡️</button>
-</div>
-""", unsafe_allow_html=True)
+# ✅ 상단 고정 버튼 (진짜 동작함)
+st.markdown('<div class="fixed-nav">', unsafe_allow_html=True)
 
-# 쿼리 처리
-query = st.query_params
-if "date" in query:
-    if query["date"] == "prev":
+col1, col2 = st.columns([1,1])
+
+with col1:
+    if st.button("⬅️ 전날"):
         st.session_state.target_date -= datetime.timedelta(days=1)
-    elif query["date"] == "next":
+        st.rerun()
+
+with col2:
+    if st.button("다음날 ➡️"):
         st.session_state.target_date += datetime.timedelta(days=1)
-    st.query_params.clear()
-    st.rerun()
+        st.rerun()
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # 날짜 선택
 selected_date = st.date_input("날짜 직접 선택", value=st.session_state.target_date)
@@ -111,6 +114,21 @@ if duty_list:
         content += "<p class='duty-title E'>Eve</p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
         
+        content += "<p class='duty-title N'>Night</p>"
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
+        content += "</div>"
+        
+        if side_html == "left": left_html = content
+        else: right_html = content
+
+    st.markdown(f"""
+        <div class='main-container'>
+            {left_html}
+            {right_html}
+        </div>
+        """, unsafe_allow_html=True)
+else:
+    st.warning(f"{current_date.year}년 {current_date.month}월 근무표 데이터가 없습니다.")        
         content += "<p class='duty-title N'>Night</p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
         content += "</div>"
