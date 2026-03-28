@@ -117,5 +117,3 @@ else:
             <div class="flex-item">{right_html}</div>
         </div>
         """, unsafe_allow_html=True)
-else:
-    st.error(f"⚠️ {selected_date.year}년 {selected_date.month}월 데이터 파일이 없습니다.")
