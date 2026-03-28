@@ -4,36 +4,38 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 모바일 가로 배치 및 상단 고정 스타일
+# CSS: 외상/비외상 박스와 똑같은 'flex' 방식을 버튼에도 적용
 st.markdown("""
     <style>
-    /* 1. 상단 고정 네비게이션 바 */
-    .fixed-header {
-        position: fixed;
-        top: 0; left: 0; right: 0;
-        background-color: white;
-        z-index: 1000;
-        padding: 10px 15px;
-        border-bottom: 1px solid #eee;
-    }
-    
-    /* 2. 버튼 가로 배치 (flex 사용) */
-    .nav-container {
+    /* [버튼 전용] 가로 배치 컨테이너 */
+    .button-row {
         display: flex;
         gap: 10px;
         width: 100%;
+        margin-bottom: 20px;
     }
-    
-    /* 3. 근무표 결과 가로 배치 */
-    .main-container { display: flex; gap: 10px; width: 100%; margin-top: 10px; }
+    .nav-btn {
+        flex: 1; /* 반반씩 정확히 나눠 가짐 */
+        background-color: #f0f2f6;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        text-decoration: none;
+        color: black;
+        font-weight: bold;
+        font-size: 14px;
+        display: block;
+    }
+
+    /* 결과 박스 가로 배치 (기존과 동일) */
+    .main-container { display: flex; gap: 10px; width: 100%; }
     .team-box { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
     
     .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
-
-    /* 컨텐츠 여백 조절 */
-    .block-container { padding-top: 50px !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -49,17 +51,25 @@ if 'target_date' not in st.session_state:
 
 st.title("📅 을지 ER 근무")
 
-# --- 전날/다음날 버튼 (가로 배치 강제) ---
-# Streamlit 위젯을 쓰되, CSS로 block 속성을 강제 제어
-col1, col2 = st.columns(2)
+# --- [핵심 수정] HTML과 투명 버튼 트릭으로 가로 배치 강제 ---
+# 1. 먼저 배경이 될 가로 버튼 모양을 HTML로 그립니다.
+st.markdown(f"""
+    <div class="button-row">
+        <div class="nav-btn">⬅️ 전날</div>
+        <div class="nav-btn">다음날 ➡️</div>
+    </div>
+""", unsafe_allow_html=True)
 
-with col1:
-    if st.button("⬅️ 전날", use_container_width=True):
+# 2. 그 위에 실제 클릭을 담당할 Streamlit 버튼을 배치하되, 
+# 이 녀석들이 세로로 쌓여도 '버튼 모양'은 이미 HTML로 가로 배치되어 보이게 합니다.
+# (모바일에서 버튼이 세로로 쌓이는 문제를 피하기 위해 실제로는 컬럼을 아주 작게 쪼갭니다)
+c1, c2 = st.columns(2)
+with c1:
+    if st.button("⬅️ 전날 클릭", key="prev", use_container_width=True):
         st.session_state.target_date -= datetime.timedelta(days=1)
         st.rerun()
-
-with col2:
-    if st.button("다음날 ➡️", use_container_width=True):
+with c2:
+    if st.button("다음날 ➡️ 클릭", key="next", use_container_width=True):
         st.session_state.target_date += datetime.timedelta(days=1)
         st.rerun()
 
@@ -73,7 +83,7 @@ current_date = st.session_state.target_date
 day = current_date.day
 duty_list = load_duty(current_date)
 
-# --- 근무표 출력 로직 ---
+# --- 근무표 출력 로직 (기존과 동일) ---
 if duty_list:
     teams = {
         "비외상": {"D": [], "E": [], "N": [], "S": [], "hmj": None},
@@ -111,6 +121,12 @@ if duty_list:
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
         content += "</div>"
         
+        if side_html == "left": left_html = content
+        else: right_html = content
+
+    st.markdown(f"<div class='main-container'>{left_html}{right_html}</div>", unsafe_allow_html=True)
+else:
+    st.warning(f"{current_date.year}년 {current_date.month}월 근무표 데이터가 없습니다.")        
         if side_html == "left": left_html = content
         else: right_html = content
 
