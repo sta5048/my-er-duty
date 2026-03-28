@@ -4,34 +4,51 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 모바일에서도 버튼과 박스의 가로 배치를 절대적으로 유지
+# CSS: 요청하신 상단 고정(fixed) 및 가로 배치(flex) 반영
 st.markdown("""
     <style>
-    /* 1. 결과 박스 가로 배치 */
-    .main-container { display: flex; gap: 10px; width: 100%; }
-    .team-box { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
-    
-    /* 2. [핵심] 버튼 영역 모바일 가로 배치 강제 */
-    [data-testid="stHorizontalBlock"] {
+    /* 1. 상단 내비게이션 고정 (전날/다음날 버튼 영역) */
+    div[data-testid="stHorizontalBlock"]:has(button) {
+        position: fixed;
+        top: 60px; /* 타이틀 아래 적당한 위치 */
+        left: 0;
+        right: 0;
         display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 10px !important;
+        flex-direction: row !important; /* 가로 배치 강제 */
+        justify-content: center;
+        gap: 10px;
+        padding: 10px 20px;
+        background-color: white;
+        z-index: 999;
+        border-bottom: 1px solid #eee;
     }
-    [data-testid="column"] {
+
+    /* 2. 각 버튼 컬럼 너비 고정 */
+    div[data-testid="column"] {
         flex: 1 !important;
-        width: 50% !important;
         min-width: 0 !important;
     }
 
+    /* 3. 버튼 스타일 */
+    .stButton > button {
+        padding: 6px 14px;
+        font-size: 14px;
+        border-radius: 8px;
+        width: 100%;
+    }
+
+    /* 4. 컨텐츠가 버튼에 가려지지 않게 여백 추가 */
+    .block-container {
+        padding-top: 100px !important;
+    }
+
+    /* 5. 결과 박스 가로 배치 (비외상/외상) */
+    .main-container { display: flex; gap: 10px; width: 100%; }
+    .team-box { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
+    
     .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
-    
-    .stButton > button {
-        width: 100%;
-        white-space: nowrap;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -44,26 +61,23 @@ def load_duty(selected_date):
 
 st.title("📅 을지 ER 근무")
 
-# 앱 접속 시 오늘 날짜로 초기화
+# 날짜 초기화
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# 전날/다음날 버튼 (CSS에 의해 가로로 고정됨)
+# 전날/다음날 버튼 (CSS에 의해 상단 고정 및 가로 배치됨)
 col1, col2 = st.columns(2)
-
 with col1:
     if st.button("⬅️ 전날", use_container_width=True):
         st.session_state.target_date -= datetime.timedelta(days=1)
         st.rerun()
-
 with col2:
     if st.button("다음날 ➡️", use_container_width=True):
         st.session_state.target_date += datetime.timedelta(days=1)
         st.rerun()
 
-# 날짜 직접 선택
+# 날짜 선택기
 selected_date = st.date_input("날짜 직접 선택", value=st.session_state.target_date)
-
 if selected_date != st.session_state.target_date:
     st.session_state.target_date = selected_date
     st.rerun()
@@ -72,7 +86,7 @@ current_date = st.session_state.target_date
 day = current_date.day
 duty_list = load_duty(current_date)
 
-# 근무표 출력 로직
+# 근무표 출력
 if duty_list:
     teams = {
         "비외상": {"D": [], "E": [], "N": [], "S": [], "hmj": None},
@@ -100,26 +114,18 @@ if duty_list:
     for team_label, side_html in [("비외상", "left"), ("외상", "right")]:
         t = teams[team_label]
         content = f"<div class='team-box'><h4>🏥 {team_label}</h4>"
-        
-        # Day
         content += "<p class='duty-title D'>Day</p>"
         if t["S"]: content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
         if t["hmj"]: content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
-        
-        # Eve
         content += "<p class='duty-title E'>Eve</p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
-        
-        # Night
         content += "<p class='duty-title N'>Night</p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
         content += "</div>"
 
-        if side_html == "left":
-            left_html = content
-        else:
-            right_html = content
+        if side_html == "left": left_html = content
+        else: right_html = content
 
     st.markdown(f"""
         <div class='main-container'>
