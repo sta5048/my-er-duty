@@ -4,19 +4,35 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 버튼과 근무 카드를 모두 5:5로 정렬
+# CSS: 버튼과 근무 카드를 모두 가로로 강제 배치
 st.markdown("""
     <style>
-    .main-container { display: flex; gap: 10px; width: 100%; }
-    .team-box { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
+    /* 공통 컨테이너: 가로 정렬 강제 */
+    .flex-container { 
+        display: flex; 
+        gap: 8px; 
+        width: 100%; 
+        margin-bottom: 10px;
+    }
+    /* 버튼과 박스가 동일한 비율로 가로를 채우도록 설정 */
+    .flex-item { 
+        flex: 1; 
+        min-width: 0; 
+    }
+    
+    .team-box { border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
     .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
     
-    /* 버튼 스타일: 가로로 꽉 차게 */
+    /* Streamlit 기본 버튼 스타일 덮어쓰기 (모바일 줄바꿈 방지) */
+    div[data-testid="column"] {
+        flex: 1 !important;
+        min-width: 0px !important;
+    }
     div.stButton > button {
         width: 100%;
-        height: 3em;
+        padding: 10px 0;
         font-weight: bold;
     }
     </style>
@@ -34,21 +50,22 @@ st.title("📅 ER 근무 조회")
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# [어제]와 [내일] 버튼을 외상/비외상처럼 5:5로 배치
+# 버튼 3개를 강제로 한 줄에 배치
 btn_col1, btn_col2, btn_col3 = st.columns(3)
 with btn_col1:
-    if st.button("⬅️ 어제"):
+    if st.button("⬅️ 전날"):
         st.session_state.target_date -= datetime.timedelta(days=1)
-        st.rerun() # 즉시 반영을 위해 리런
-with btn_col2: 
+        st.rerun()
+with btn_col2:
     if st.button("오늘 📍"):
         st.session_state.target_date = datetime.date.today()
+        st.rerun()
 with btn_col3:
-    if st.button("내일 ➡️"):
+    if st.button("담날 ➡️"):
         st.session_state.target_date += datetime.timedelta(days=1)
         st.rerun()
 
-# 날짜 선택기 (버튼과 연동)
+# 날짜 선택기
 selected_date = st.date_input("날짜 선택", st.session_state.target_date)
 st.session_state.target_date = selected_date
 
@@ -76,32 +93,29 @@ if duty_list:
             elif work == 'S': target["S"].append(clean_name)
             elif "홍민정" in clean_name: target["hmj"] = work
 
-    # HTML 렌더링 파트
     left_html = ""
     right_html = ""
 
     for team_label in ["비외상", "외상"]:
         t = teams[team_label]
         content = f"<div class='team-box'><h4>🏥 {team_label}</h4>"
-        
         for shift, label in [("D", "Day"), ("E", "Eve"), ("N", "Night")]:
             content += f"<p class='duty-title {shift}'>{label}</p>"
             if shift == "D":
                 if t["S"]: content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
                 if t["hmj"]: content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
-            
             names = t[shift]
             content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(names)])
-        
         content += "</div>"
+        
         if team_label == "비외상": left_html = content
         else: right_html = content
 
-    # 최종 결과 출력 (버튼 하단에 5:5 배치)
+    # 최종 결과: 근무표도 flex-container를 사용하여 배치
     st.markdown(f"""
-        <div class='main-container'>
-            {left_html}
-            {right_html}
+        <div class="flex-container">
+            <div class="flex-item">{left_html}</div>
+            <div class="flex-item">{right_html}</div>
         </div>
         """, unsafe_allow_html=True)
 else:
