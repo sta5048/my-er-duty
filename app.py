@@ -78,4 +78,3 @@ if duty_list:
             {right_html}
         </div>
         """, unsafe_allow_html=True)
-내가 작성한 타이틀이랑 앱에 뜨는 타이틀이 왜 달라?
