@@ -14,7 +14,6 @@ st.markdown("""
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
 
-    /* ✅ 상단 고정 */
     .fixed-nav {
         position: fixed;
         top: 70px;
@@ -26,7 +25,6 @@ st.markdown("""
         z-index: 9999;
     }
 
-    /* 버튼 크기 */
     .stButton > button {
         padding: 6px 14px;
         font-size: 14px;
@@ -34,29 +32,31 @@ st.markdown("""
         width: auto;
     }
 
-    /* 본문 안 가려지게 */
     .block-container {
         padding-top: 120px;
     }
     </style>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
+
 
 def load_duty(selected_date):
     filename = f"data/duty_{selected_date.year}_{selected_date.month:02d}.csv"
-    if not os.path.exists(filename): return None
+    if not os.path.exists(filename):
+        return None
     with open(filename, "r", encoding="utf-8") as f:
         return [line.strip().split(",") for line in f]
 
+
 st.title("📅 을지 ER 근무")
 
-# --- 날짜 조절 ---
+# 날짜 초기값
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# ✅ 상단 고정 버튼 (진짜 동작함)
+# 상단 고정 버튼
 st.markdown('<div class="fixed-nav">', unsafe_allow_html=True)
 
-col1, col2 = st.columns([1,1])
+col1, col2 = st.columns(2)
 
 with col1:
     if st.button("⬅️ 전날"):
@@ -80,7 +80,7 @@ current_date = st.session_state.target_date
 day = current_date.day
 duty_list = load_duty(current_date)
 
-# --- 근무표 ---
+# 근무표
 if duty_list:
     teams = {
         "비외상": {"D": [], "E": [], "N": [], "S": [], "hmj": None},
@@ -93,12 +93,18 @@ if duty_list:
             team_key = "외상" if "*" in raw_name else "비외상"
             clean_name = raw_name.replace("*", "")
             target = teams[team_key]
-            
-            if work == 'D': target["D"].append(clean_name)
-            elif work == 'E': target["E"].append(clean_name)
-            elif work == 'N': target["N"].append(clean_name)
-            elif work == 'S': target["S"].append(clean_name)
-            elif "홍민정" in clean_name and work != 'OF': target["hmj"] = work
+
+            if work == 'D':
+                target["D"].append(clean_name)
+            elif work == 'E':
+                target["E"].append(clean_name)
+            elif work == 'N':
+                target["N"].append(clean_name)
+            elif work == 'S':
+                target["S"].append(clean_name)
+
+            if "홍민정" in clean_name and work != 'OF':
+                target["hmj"] = work
 
     left_html = ""
     right_html = ""
@@ -106,11 +112,39 @@ if duty_list:
     for team_label, side_html in [("비외상", "left"), ("외상", "right")]:
         t = teams[team_label]
         content = f"<div class='team-box'><h4>🏥 {team_label}</h4>"
+
+        # Day
         content += "<p class='duty-title D'>Day</p>"
-        if t["S"]: content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
-        if t["hmjfor team_label, side_html in [("비외상", "left"), ("외상", "right")]:
-    t = teams[team_label]
-    content = f"<div class='team-box'><h4>🏥 {team_label}</h4>"
+        if t["S"]:
+            content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
+        if t["hmj"]:
+            content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
+
+        # Eve
+        content += "<p class='duty-title E'>Eve</p>"
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
+
+        # Night
+        content += "<p class='duty-title N'>Night</p>"
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
+
+        content += "</div>"
+
+        if side_html == "left":
+            left_html = content
+        else:
+            right_html = content
+
+    st.markdown(f"""
+        <div class='main-container'>
+            {left_html}
+            {right_html}
+        </div>
+    """, unsafe_allow_html=True)
+
+else:
+    st.warning(f"{current_date.year}년 {current_date.month}월 근무표 데이터가 없습니다.")    content = f"<div class='team-box'><h4>🏥 {team_label}</h4>"
 
     content += "<p class='duty-title D'>Day</p>"
     if t["S"]:
