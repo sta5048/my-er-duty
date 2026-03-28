@@ -12,6 +12,8 @@ st.markdown("""
     .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
+    /* 버튼 간격 조절 */
+    .stButton > button { width: 100%; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -22,9 +24,36 @@ def load_duty(selected_date):
         return [line.strip().split(",") for line in f]
 
 st.title("📅 ER 근무 조회")
-selected_date = st.date_input("날짜 선택", datetime.date.today())
-day = selected_date.day
-duty_list = load_duty(selected_date)
+
+# --- 날짜 조절 로직 추가 ---
+if 'target_date' not in st.session_state:
+    st.session_state.target_date = datetime.date.today()
+
+col1, col2, col3 = st.columns([1, 2, 1])
+
+with col1:
+    if st.button("⬅️ 전날"):
+        st.session_state.target_date -= datetime.timedelta(days=1)
+        st.rerun()
+
+with col2:
+    # 캘린더 선택기: session_state와 연동
+    selected_date = st.date_input("날짜 선택", value=st.session_state.target_date)
+    # 캘린더에서 직접 날짜를 변경했을 경우 처리
+    if selected_date != st.session_state.target_date:
+        st.session_state.target_date = selected_date
+        st.rerun()
+
+with col3:
+    if st.button("다음날 ➡️"):
+        st.session_state.target_date += datetime.timedelta(days=1)
+        st.rerun()
+
+# 최종 선택된 날짜 사용
+current_date = st.session_state.target_date
+day = current_date.day
+duty_list = load_duty(current_date)
+# -------------------------
 
 if duty_list:
     teams = {
@@ -45,7 +74,6 @@ if duty_list:
             elif work == 'S': target["S"].append(clean_name)
             elif "홍민정" in clean_name and work != 'OF': target["hmj"] = work
 
-    # HTML을 이용한 좌우 강제 배치
     left_html = ""
     right_html = ""
 
@@ -55,7 +83,7 @@ if duty_list:
         
         # Day
         content += "<p class='duty-title D'>Day</p>"
-        if t["S"]: content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
+        if t["S"]: content += "".join([f<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
         if t["hmj"]: content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
         
@@ -71,10 +99,11 @@ if duty_list:
         if side_html == "left": left_html = content
         else: right_html = content
 
-    # 최종 결과 출력
     st.markdown(f"""
         <div class='main-container'>
             {left_html}
             {right_html}
         </div>
         """, unsafe_allow_html=True)
+else:
+    st.warning(f"{current_date.year}년 {current_date.month}월 근무표 파일이 없습니다.")
