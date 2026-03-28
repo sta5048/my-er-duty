@@ -4,7 +4,7 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 모바일에서도 가로 배치를 강제하고 폰트 크기를 살짝 조절함
+# CSS: 모바일에서도 가로 배치 강제
 st.markdown("""
     <style>
     .main-container { display: flex; gap: 10px; width: 100%; }
@@ -23,15 +23,15 @@ def load_duty(selected_date):
     with open(filename, "r", encoding="utf-8") as f:
         return [line.strip().split(",") for line in f]
 
-st.title("📅 ER 근무 조회")
+st.title("📅 을지 ER 근무")
 
 # --- 날짜 조절 로직 ---
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
 # 버튼들을 한 줄에 나란히 배치 (3개 컬럼 사용: 버튼, 여백, 버튼)
-# [1, 0.2, 1] 비율로 주면 가운데에 살짝 틈이 생깁니다.
-col_left, col_mid, col_right = st.columns([1, 0.1, 1])
+# [1, 0.2, 1] 비율로 주면 가운데에 살짝 틈
+col_left, col_mid, col_right = st.columns([1, 1, 1])
 
 with col_left:
     if st.button("⬅️ 전날", use_container_width=True):
@@ -39,7 +39,7 @@ with col_left:
         st.rerun()
 
 with col_right:
-    if st.button("다음날 ➡️", use_container_width=True):
+    if st.button("담날 ➡️", use_container_width=True):
         st.session_state.target_date += datetime.timedelta(days=1)
         st.rerun()
 
