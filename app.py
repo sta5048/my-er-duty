@@ -4,31 +4,29 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 결과 박스와 상단 버튼 모두 flex를 사용하여 가로 배치 강제
+# CSS: 모바일에서도 가로 배치를 강제하는 스타일 추가
 st.markdown("""
     <style>
-    /* 상단 버튼 컨테이너 */
-    .button-container { display: flex; gap: 10px; margin-bottom: 15px; }
-    .nav-button { 
-        flex: 1; 
-        padding: 10px; 
-        text-align: center; 
-        background-color: #f0f2f6; 
-        border: 1px solid #ddd; 
-        border-radius: 5px; 
-        cursor: pointer;
-        text-decoration: none;
-        color: black;
-        font-weight: bold;
-    }
-    
     /* 결과 박스 가로 배치 */
     .main-container { display: flex; gap: 10px; width: 100%; }
     .team-box { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
     
+    /* [핵심] 버튼을 감싸는 row가 모바일에서도 가로를 유지하도록 강제 */
+    [data-testid="column"] {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: flex-end !important;
+    }
+
     .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
+    .stButton > button { width: 100%; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -44,10 +42,8 @@ st.title("📅 을지 ER 근무")
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# 버튼을 가로로 강제 배치 (박스 쪼개기와 동일한 flex 방식)
-# 버튼 클릭 처리를 위해 투명한 st.button을 HTML 위에 겹치거나, 간단하게 st.columns를 유지하되 CSS로 flex를 강제합니다.
+# 버튼 2개를 나란히 배치 (위의 CSS가 이 col1, col2를 강제로 가로 배치함)
 col1, col2 = st.columns(2)
-
 with col1:
     if st.button("⬅️ 전날", use_container_width=True):
         st.session_state.target_date -= datetime.timedelta(days=1)
@@ -67,7 +63,7 @@ current_date = st.session_state.target_date
 day = current_date.day
 duty_list = load_duty(current_date)
 
-# --- 이하 근무표 출력 로직 (동일) ---
+# --- 근무표 출력 로직 ---
 if duty_list:
     teams = {
         "비외상": {"D": [], "E": [], "N": [], "S": [], "hmj": None},
@@ -111,6 +107,9 @@ if duty_list:
             {left_html}
             {right_html}
         </div>
+        """, unsafe_allow_html=True)
+else:
+    st.warning(f"{current_date.year}년 {current_date.month}월 근무표 데이터가 없습니다.")        </div>
         """, unsafe_allow_html=True)
 else:
     st.warning(f"{current_date.year}년 {current_date.month}월 근무표 데이터가 없습니다.")
