@@ -31,17 +31,24 @@ st.title("📅 을지 ER 근무")
 # --- 날짜 조절 로직 ---
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
+# 버튼 가로 고정 (HTML + JS)
+st.markdown(f"""
+<div style="display:flex; gap:10px;">
+    <button onclick="window.location.href='?date=prev'" style="flex:1; padding:10px;">⬅️ 전날</button>
+    <button onclick="window.location.href='?date=next'" style="flex:1; padding:10px;">다음날 ➡️</button>
+</div>
+""", unsafe_allow_html=True)
 
-# ✅ 여기만 수정됨 (div 제거 + columns만 사용)
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("⬅️ 전날", use_container_width=True):
+# 쿼리 파라미터로 날짜 변경 처리
+query = st.query_params
+
+if "date" in query:
+    if query["date"] == "prev":
         st.session_state.target_date -= datetime.timedelta(days=1)
-        st.rerun()
-with col2:
-    if st.button("다음날 ➡️", use_container_width=True):
+    elif query["date"] == "next":
         st.session_state.target_date += datetime.timedelta(days=1)
-        st.rerun()
+    st.query_params.clear()
+    st.rerun()
 
 # 날짜 선택기
 selected_date = st.date_input("날짜 직접 선택", value=st.session_state.target_date)
