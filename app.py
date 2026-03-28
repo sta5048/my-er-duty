@@ -4,28 +4,20 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 모바일에서도 가로 배치를 강제하는 스타일 추가
+# CSS: 결과 박스와 버튼 모두 flex를 사용하여 가로 배치 강제
 st.markdown("""
     <style>
     /* 결과 박스 가로 배치 */
     .main-container { display: flex; gap: 10px; width: 100%; }
     .team-box { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
     
-    /* [핵심] 버튼을 감싸는 row가 모바일에서도 가로를 유지하도록 강제 */
-    [data-testid="column"] {
-        flex: 1 !important;
-        min-width: 0 !important;
-    }
-    div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: flex-end !important;
-    }
-
     .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
+    
+    /* 버튼 가로 배치 강제 전용 스타일 */
+    .row-container { display: flex; gap: 10px; margin-bottom: 10px; }
+    .row-container > div { flex: 1; }
     .stButton > button { width: 100%; }
     </style>
     """, unsafe_allow_html=True)
@@ -42,7 +34,8 @@ st.title("📅 을지 ER 근무")
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# 버튼 2개를 나란히 배치 (위의 CSS가 이 col1, col2를 강제로 가로 배치함)
+# HTML 컨테이너를 먼저 선언하고 그 안에 버튼을 배치 (가로 배치 강제)
+st.markdown('<div class="row-container">', unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
     if st.button("⬅️ 전날", use_container_width=True):
@@ -52,6 +45,7 @@ with col2:
     if st.button("다음날 ➡️", use_container_width=True):
         st.session_state.target_date += datetime.timedelta(days=1)
         st.rerun()
+st.markdown('</div>', unsafe_allow_html=True)
 
 # 날짜 선택기
 selected_date = st.date_input("날짜 직접 선택", value=st.session_state.target_date)
@@ -93,8 +87,10 @@ if duty_list:
         if t["S"]: content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
         if t["hmj"]: content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
+        
         content += "<p class='duty-title E'>Eve</p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
+        
         content += "<p class='duty-title N'>Night</p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
         content += "</div>"
@@ -102,14 +98,12 @@ if duty_list:
         if side_html == "left": left_html = content
         else: right_html = content
 
+    # 최종 결과 출력
     st.markdown(f"""
         <div class='main-container'>
             {left_html}
             {right_html}
         </div>
-        """, unsafe_allow_html=True)
-else:
-    st.warning(f"{current_date.year}년 {current_date.month}월 근무표 데이터가 없습니다.")        </div>
         """, unsafe_allow_html=True)
 else:
     st.warning(f"{current_date.year}년 {current_date.month}월 근무표 데이터가 없습니다.")
