@@ -4,10 +4,9 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 모바일 가로 고정 (절대 밑으로 안 내려가게 강제)
+# CSS: 모바일에서도 절대 줄바꿈 되지 않도록 강제 설정
 st.markdown("""
     <style>
-    /* 1. 상단 버튼 및 하단 근무표 레이아웃 강제 고정 */
     [data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
@@ -18,16 +17,12 @@ st.markdown("""
         flex: 1 !important;
         min-width: 0px !important;
     }
-
-    /* 2. 버튼 텍스트 및 패딩 최적화 */
     div.stButton > button {
         width: 100%;
         padding: 5px 0px !important;
         font-size: 13px !important;
         white-space: nowrap;
     }
-
-    /* 3. 근무표 박스 디자인 */
     .team-box { 
         border: 1px solid #ddd; 
         padding: 8px; 
@@ -51,7 +46,7 @@ st.title("📅 ER 근무 조회")
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# 버튼 영역: CSS 덕분에 좁은 화면에서도 한 줄에 3개 유지
+# 버튼 영역 (어제, 오늘, 내일 한 줄 배치)
 b1, b2, b3 = st.columns(3)
 with b1:
     if st.button("⬅️ 어제"):
@@ -66,14 +61,13 @@ with b3:
         st.session_state.target_date += datetime.timedelta(days=1)
         st.rerun()
 
-# 날짜 선택기
 selected_date = st.date_input("날짜 선택", st.session_state.target_date)
 st.session_state.target_date = selected_date
 
 day = selected_date.day
 duty_list = load_duty(selected_date)
 
-# --- 핵심: 들여쓰기 주의 구간 ---
+# --- 여기서부터 들여쓰기가 매우 중요합니다 ---
 if duty_list:
     teams = {"비외상": {"D":[], "E":[], "N":[], "S":[], "hmj":None}, 
              "외상": {"D":[], "E":[], "N":[], "S":[], "hmj":None}}
@@ -91,7 +85,6 @@ if duty_list:
             elif work == 'S': target["S"].append(clean_name)
             elif "홍민정" in clean_name: target["hmj"] = work
 
-    # 근무표 영역: 가로 배치 고정
     c1, c2 = st.columns(2)
     for label, col in [("비외상", c1), ("외상", c2)]:
         with col:
@@ -106,11 +99,10 @@ if duty_list:
                 for i, name in enumerate(t[shift]):
                     st.markdown(f"<p class='name-text'>{i+1}. {name}</p>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
+
 else:
-    # 이 else는 바로 위의 if duty_list와 세로 줄이 딱 맞아야 합니다.
-    st.error(f"⚠️ {selected_date.year}년 {selected_date.month}월 데이터가 없습니다.")else:
-    st.error(f"⚠️ {selected_date.year}년 {selected_date.month}월 데이터가 없습니다.")
-    # 최종 결과: 근무표도 flex-container를 사용하여 배치
+    # 이 else는 반드시 if duty_list와 세로 줄이 맞아야 합니다.
+    st.error(f"⚠️ {selected_date.year}년 {selected_date.month}월 데이터가 없습니다.")    # 최종 결과: 근무표도 flex-container를 사용하여 배치
     st.markdown(f"""
         <div class="flex-container">
             <div class="flex-item">{left_html}</div>
