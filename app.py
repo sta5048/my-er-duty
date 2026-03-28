@@ -86,7 +86,7 @@ if duty_list:
                 if t["hmj"]: content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
             
             names = t[shift]
-            content += "".join([f<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(names)])
+            content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(names)])
         
         content += "</div>"
         if team_label == "비외상": left_html = content
