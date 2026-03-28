@@ -108,18 +108,29 @@ if duty_list:
         content = f"<div class='team-box'><h4>🏥 {team_label}</h4>"
         content += "<p class='duty-title D'>Day</p>"
         if t["S"]: content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
-        if t["hmj"]: content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
-        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
-        
-        content += "<p class='duty-title E'>Eve</p>"
-        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
-        
-        content += "<p class='duty-title N'>Night</p>"
-        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
-        content += "</div>"
-        
-        if side_html == "left": left_html = content
-        else: right_html = content
+        if t["hmjfor team_label, side_html in [("비외상", "left"), ("외상", "right")]:
+    t = teams[team_label]
+    content = f"<div class='team-box'><h4>🏥 {team_label}</h4>"
+
+    content += "<p class='duty-title D'>Day</p>"
+    if t["S"]:
+        content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
+    if t["hmj"]:
+        content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
+    content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
+
+    content += "<p class='duty-title E'>Eve</p>"
+    content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
+
+    content += "<p class='duty-title N'>Night</p>"
+    content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
+
+    content += "</div>"
+
+    if side_html == "left":
+        left_html = content
+    else:
+        right_html = content
 
     st.markdown(f"""
         <div class='main-container'>
