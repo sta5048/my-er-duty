@@ -4,7 +4,7 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 기존 레이아웃 유지 + 버튼 스타일 살짝 추가
+# CSS: 버튼과 근무 카드를 모두 5:5로 정렬
 st.markdown("""
     <style>
     .main-container { display: flex; gap: 10px; width: 100%; }
@@ -12,8 +12,13 @@ st.markdown("""
     .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
-    /* 버튼 정렬을 위한 컨테이너 */
-    .stButton>button { width: 100%; }
+    
+    /* 버튼 스타일: 가로로 꽉 차게 */
+    div.stButton > button {
+        width: 100%;
+        height: 3em;
+        font-weight: bold;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -21,45 +26,45 @@ def load_duty(selected_date):
     filename = f"data/duty_{selected_date.year}_{selected_date.month:02d}.csv"
     if not os.path.exists(filename): return None
     with open(filename, "r", encoding="utf-8") as f:
-        # 빈 줄 제외하고 로드
         return [line.strip().split(",") for line in f if line.strip()]
 
 st.title("📅 ER 근무 조회")
 
-# --- 날짜 조절 로직 추가 ---
+# --- 날짜 제어 로직 ---
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# 버튼을 가로로 배치 (화면 분할 방식과 동일하게 2컬럼 사용)
-btn_col1, btn_col2 = st.columns(2)
+# [어제]와 [내일] 버튼을 외상/비외상처럼 5:5로 배치
+btn_col1, btn_col2, btn_col3 = st.columns(3)
 with btn_col1:
     if st.button("⬅️ 어제"):
         st.session_state.target_date -= datetime.timedelta(days=1)
-with btn_col2:
+        st.rerun() # 즉시 반영을 위해 리런
+with btn_col2: 
     if st.button("오늘 📍"):
         st.session_state.target_date = datetime.date.today()
+with btn_col3:
+    if st.button("내일 ➡️"):
+        st.session_state.target_date += datetime.timedelta(days=1)
+        st.rerun()
 
-# 날짜 선택기 (버튼 클릭 시 연동됨)
-selected_date = st.date_input("날짜 선택", st.session_state.target_date, key="date_picker")
-# 선택기에서 직접 날짜를 바꿨을 때를 위해 세션 상태 동기화
+# 날짜 선택기 (버튼과 연동)
+selected_date = st.date_input("날짜 선택", st.session_state.target_date)
 st.session_state.target_date = selected_date
 
 day = selected_date.day
 duty_list = load_duty(selected_date)
 
 if duty_list:
-    # (데이터 처리 로직은 기존과 동일)
     teams = {
         "비외상": {"D": [], "E": [], "N": [], "S": [], "hmj": None},
         "외상": {"D": [], "E": [], "N": [], "S": [], "hmj": None}
     }
 
-    # 헤더 제외 데이터 파싱
-    header = duty_list[0]
     for row in duty_list[1:]:
         if len(row) > day:
             raw_name, work = row[0], row[day]
-            if not work or work == 'OFF': continue # 쉬는 날 제외
+            if not work or work in ['OF', 'OFF', '']: continue
             
             team_key = "외상" if "*" in raw_name else "비외상"
             clean_name = raw_name.replace("*", "")
@@ -71,7 +76,7 @@ if duty_list:
             elif work == 'S': target["S"].append(clean_name)
             elif "홍민정" in clean_name: target["hmj"] = work
 
-    # HTML 생성 및 렌더링 (기존 방식 유지)
+    # HTML 렌더링 파트
     left_html = ""
     right_html = ""
 
@@ -92,6 +97,12 @@ if duty_list:
         if team_label == "비외상": left_html = content
         else: right_html = content
 
-    st.markdown(f"<div class='main-container'>{left_html}{right_html}</div>", unsafe_allow_html=True)
+    # 최종 결과 출력 (버튼 하단에 5:5 배치)
+    st.markdown(f"""
+        <div class='main-container'>
+            {left_html}
+            {right_html}
+        </div>
+        """, unsafe_allow_html=True)
 else:
-    st.warning(f"{selected_date.month}월 근무표 파일이 존재하지 않습니다.")
+    st.error(f"⚠️ {selected_date.year}년 {selected_date.month}월 데이터 파일이 없습니다.")
