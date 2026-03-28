@@ -4,73 +4,60 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 요청하신 상단 고정(fixed) 및 가로 배치(flex) 반영
+# CSS: 모바일 가로 배치 및 상단 고정 스타일
 st.markdown("""
     <style>
-    /* 1. 상단 내비게이션 고정 (전날/다음날 버튼 영역) */
-    div[data-testid="stHorizontalBlock"]:has(button) {
+    /* 1. 상단 고정 네비게이션 바 */
+    .fixed-header {
         position: fixed;
-        top: 60px; /* 타이틀 아래 적당한 위치 */
-        left: 0;
-        right: 0;
-        display: flex !important;
-        flex-direction: row !important; /* 가로 배치 강제 */
-        justify-content: center;
-        gap: 10px;
-        padding: 10px 20px;
+        top: 0; left: 0; right: 0;
         background-color: white;
-        z-index: 999;
+        z-index: 1000;
+        padding: 10px 15px;
         border-bottom: 1px solid #eee;
     }
-
-    /* 2. 각 버튼 컬럼 너비 고정 */
-    div[data-testid="column"] {
-        flex: 1 !important;
-        min-width: 0 !important;
-    }
-
-    /* 3. 버튼 스타일 */
-    .stButton > button {
-        padding: 6px 14px;
-        font-size: 14px;
-        border-radius: 8px;
+    
+    /* 2. 버튼 가로 배치 (flex 사용) */
+    .nav-container {
+        display: flex;
+        gap: 10px;
         width: 100%;
     }
-
-    /* 4. 컨텐츠가 버튼에 가려지지 않게 여백 추가 */
-    .block-container {
-        padding-top: 100px !important;
-    }
-
-    /* 5. 결과 박스 가로 배치 (비외상/외상) */
-    .main-container { display: flex; gap: 10px; width: 100%; }
+    
+    /* 3. 근무표 결과 가로 배치 */
+    .main-container { display: flex; gap: 10px; width: 100%; margin-top: 10px; }
     .team-box { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
     
     .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
+
+    /* 컨텐츠 여백 조절 */
+    .block-container { padding-top: 50px !important; }
     </style>
 """, unsafe_allow_html=True)
 
 def load_duty(selected_date):
     filename = f"data/duty_{selected_date.year}_{selected_date.month:02d}.csv"
-    if not os.path.exists(filename):
-        return None
+    if not os.path.exists(filename): return None
     with open(filename, "r", encoding="utf-8") as f:
         return [line.strip().split(",") for line in f]
-
-st.title("📅 을지 ER 근무")
 
 # 날짜 초기화
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# 전날/다음날 버튼 (CSS에 의해 상단 고정 및 가로 배치됨)
+st.title("📅 을지 ER 근무")
+
+# --- 전날/다음날 버튼 (가로 배치 강제) ---
+# Streamlit 위젯을 쓰되, CSS로 block 속성을 강제 제어
 col1, col2 = st.columns(2)
+
 with col1:
     if st.button("⬅️ 전날", use_container_width=True):
         st.session_state.target_date -= datetime.timedelta(days=1)
         st.rerun()
+
 with col2:
     if st.button("다음날 ➡️", use_container_width=True):
         st.session_state.target_date += datetime.timedelta(days=1)
@@ -86,7 +73,7 @@ current_date = st.session_state.target_date
 day = current_date.day
 duty_list = load_duty(current_date)
 
-# 근무표 출력
+# --- 근무표 출력 로직 ---
 if duty_list:
     teams = {
         "비외상": {"D": [], "E": [], "N": [], "S": [], "hmj": None},
@@ -99,7 +86,7 @@ if duty_list:
             team_key = "외상" if "*" in raw_name else "비외상"
             clean_name = raw_name.replace("*", "")
             target = teams[team_key]
-
+            
             if work == 'D': target["D"].append(clean_name)
             elif work == 'E': target["E"].append(clean_name)
             elif work == 'N': target["N"].append(clean_name)
@@ -123,15 +110,10 @@ if duty_list:
         content += "<p class='duty-title N'>Night</p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
         content += "</div>"
-
+        
         if side_html == "left": left_html = content
         else: right_html = content
 
-    st.markdown(f"""
-        <div class='main-container'>
-            {left_html}
-            {right_html}
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"<div class='main-container'>{left_html}{right_html}</div>", unsafe_allow_html=True)
 else:
     st.warning(f"{current_date.year}년 {current_date.month}월 근무표 데이터가 없습니다.")
