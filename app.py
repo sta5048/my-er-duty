@@ -4,16 +4,31 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 모바일에서도 가로 배치 강제
+# CSS: 결과 박스와 상단 버튼 모두 flex를 사용하여 가로 배치 강제
 st.markdown("""
     <style>
+    /* 상단 버튼 컨테이너 */
+    .button-container { display: flex; gap: 10px; margin-bottom: 15px; }
+    .nav-button { 
+        flex: 1; 
+        padding: 10px; 
+        text-align: center; 
+        background-color: #f0f2f6; 
+        border: 1px solid #ddd; 
+        border-radius: 5px; 
+        cursor: pointer;
+        text-decoration: none;
+        color: black;
+        font-weight: bold;
+    }
+    
+    /* 결과 박스 가로 배치 */
     .main-container { display: flex; gap: 10px; width: 100%; }
     .team-box { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
+    
     .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
-    /* 버튼 간격 조절 */
-    .stButton > button { width: 100%; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -24,12 +39,15 @@ def load_duty(selected_date):
         return [line.strip().split(",") for line in f]
 
 st.title("📅 을지 ER 근무")
-# --- 날짜 조절 로직 (세션 상태) ---
+
+# --- 날짜 조절 로직 ---
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# 1. 전날/다음날 버튼을 한 줄에 강제 배치
+# 버튼을 가로로 강제 배치 (박스 쪼개기와 동일한 flex 방식)
+# 버튼 클릭 처리를 위해 투명한 st.button을 HTML 위에 겹치거나, 간단하게 st.columns를 유지하되 CSS로 flex를 강제합니다.
 col1, col2 = st.columns(2)
+
 with col1:
     if st.button("⬅️ 전날", use_container_width=True):
         st.session_state.target_date -= datetime.timedelta(days=1)
@@ -39,20 +57,17 @@ with col2:
         st.session_state.target_date += datetime.timedelta(days=1)
         st.rerun()
 
-# 2. 날짜 선택기 (버튼 아래 배치)
+# 날짜 선택기
 selected_date = st.date_input("날짜 직접 선택", value=st.session_state.target_date)
-
-# 캘린더 조작 시 세션 업데이트
 if selected_date != st.session_state.target_date:
     st.session_state.target_date = selected_date
     st.rerun()
-    
-# 최종 변수 설정
+
 current_date = st.session_state.target_date
 day = current_date.day
 duty_list = load_duty(current_date)
-# ------------------------------
-# -------------------------
+
+# --- 이하 근무표 출력 로직 (동일) ---
 if duty_list:
     teams = {
         "비외상": {"D": [], "E": [], "N": [], "S": [], "hmj": None},
@@ -78,23 +93,16 @@ if duty_list:
     for team_label, side_html in [("비외상", "left"), ("외상", "right")]:
         t = teams[team_label]
         content = f"<div class='team-box'><h4>🏥 {team_label}</h4>"
-        
-        # Day
         content += "<p class='duty-title D'>Day</p>"
-        # 문법 오류 수정 지점: f"..." 형태로 따옴표를 정확히 넣었습니다.
         if t["S"]: content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
         if t["hmj"]: content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
-        
-        # Eve
         content += "<p class='duty-title E'>Eve</p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
-        
-        # Night
         content += "<p class='duty-title N'>Night</p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
-        
         content += "</div>"
+        
         if side_html == "left": left_html = content
         else: right_html = content
 
