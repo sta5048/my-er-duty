@@ -25,31 +25,31 @@ def load_duty(selected_date):
 
 st.title("📅 ER 근무 조회")
 
-# --- 날짜 조절 로직 ---
+# --- 날짜 조절 로직 (세션 상태 유지) ---
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-col1, col2, col3 = st.columns([1, 2, 1])
+# 버튼 클릭 이벤트 처리를 위한 컨테이너
+col_btn1, col_btn2 = st.columns(2)
 
-with col1:
-    if st.button("⬅️ 전날"):
+with col_btn1:
+    if st.button("⬅️ 전날", use_container_width=True):
         st.session_state.target_date -= datetime.timedelta(days=1)
         st.rerun()
 
-with col2:
-    # 캘린더 선택기: session_state와 연동
-    selected_date = st.date_input("날짜 선택", value=st.session_state.target_date)
-    # 캘린더에서 직접 날짜를 변경했을 경우 처리
-    if selected_date != st.session_state.target_date:
-        st.session_state.target_date = selected_date
-        st.rerun()
-
-with col3:
-    if st.button("다음날 ➡️"):
+with col_btn2:
+    if st.button("다음날 ➡️", use_container_width=True):
         st.session_state.target_date += datetime.timedelta(days=1)
         st.rerun()
 
-# 최종 선택된 날짜 사용
+# 날짜 선택기는 버튼 아래에 깔끔하게 배치
+selected_date = st.date_input("날짜 직접 선택", value=st.session_state.target_date)
+
+if selected_date != st.session_state.target_date:
+    st.session_state.target_date = selected_date
+    st.rerun()
+
+# 최종 선택된 날짜 정보 사용
 current_date = st.session_state.target_date
 day = current_date.day
 duty_list = load_duty(current_date)
