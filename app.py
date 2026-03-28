@@ -23,9 +23,9 @@ def load_duty(selected_date):
     with open(filename, "r", encoding="utf-8") as f:
         return [line.strip().split(",") for line in f]
 
-st.title("📅 을지 ER 근무")
+st.title("📅 ER 근무 조회")
 
-# --- 날짜 조절 로직 추가 ---
+# --- 날짜 조절 로직 ---
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
@@ -83,7 +83,8 @@ if duty_list:
         
         # Day
         content += "<p class='duty-title D'>Day</p>"
-        if t["S"]: content += "".join([f<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
+        # 문법 오류 수정 지점: f"..." 형태로 따옴표를 정확히 넣었습니다.
+        if t["S"]: content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
         if t["hmj"]: content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
         content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
         
@@ -106,4 +107,4 @@ if duty_list:
         </div>
         """, unsafe_allow_html=True)
 else:
-    st.warning(f"{current_date.year}년 {current_date.month}월 근무표 파일이 없습니다.")
+    st.warning(f"{current_date.year}년 {current_date.month}월 근무표 데이터가 없습니다.")
