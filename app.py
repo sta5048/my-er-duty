@@ -24,36 +24,34 @@ def load_duty(selected_date):
         return [line.strip().split(",") for line in f]
 
 st.title("📅 을지 ER 근무")
-
-# --- 날짜 조절 로직 ---
+# --- 날짜 조절 로직 (세션 상태) ---
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# 버튼들을 한 줄에 나란히 배치 (3개 컬럼 사용: 버튼, 여백, 버튼)
-# [1, 0.2, 1] 비율로 주면 가운데에 살짝 틈
-col_left, col_mid, col_right = st.columns([1, 1, 1])
-
-with col_left:
+# 1. 전날/다음날 버튼을 한 줄에 강제 배치
+col1, col2 = st.columns(2)
+with col1:
     if st.button("⬅️ 전날", use_container_width=True):
         st.session_state.target_date -= datetime.timedelta(days=1)
         st.rerun()
-
-with col_right:
-    if st.button("담날 ➡️", use_container_width=True):
+with col2:
+    if st.button("다음날 ➡️", use_container_width=True):
         st.session_state.target_date += datetime.timedelta(days=1)
         st.rerun()
 
-# 날짜 선택기 (버튼 아래에 위치)
+# 2. 날짜 선택기 (버튼 아래 배치)
 selected_date = st.date_input("날짜 직접 선택", value=st.session_state.target_date)
 
+# 캘린더 조작 시 세션 업데이트
 if selected_date != st.session_state.target_date:
     st.session_state.target_date = selected_date
     st.rerun()
-
-# 최종 선택된 날짜 정보 사용
+    
+# 최종 변수 설정
 current_date = st.session_state.target_date
 day = current_date.day
 duty_list = load_duty(current_date)
+# ------------------------------
 # -------------------------
 if duty_list:
     teams = {
