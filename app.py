@@ -4,52 +4,16 @@ import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
-# CSS: 외상/비외상 박스와 완전히 동일한 로직 적용
+# CSS: 모바일에서도 가로 배치를 강제하고 폰트 크기를 살짝 조절함
 st.markdown("""
     <style>
-    /* 1. 공통 가로 배치 컨테이너 (버튼 & 결과박스 공용) */
-    .half-split-container {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        width: 100% !important;
-        gap: 10px !important;
-        margin-bottom: 15px;
-    }
-    .half-item {
-        flex: 1 !important;
-        min-width: 0 !important; /* 박스가 화면 밖으로 절대 안 나감 */
-    }
-
-    /* 2. 버튼 디자인 (외상/비외상 박스처럼 깔끔하게) */
-    .custom-btn {
-        display: block;
-        width: 100%;
-        padding: 12px 0;
-        text-align: center;
-        background-color: #f0f2f6;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        color: #31333F;
-        font-weight: 600;
-        font-size: 14px;
-        cursor: pointer;
-        text-decoration: none;
-    }
-    
-    /* 3. 실제 클릭을 처리할 Streamlit 버튼 숨기기 트릭 */
-    .stButton button {
-        width: 100%;
-        height: 45px;
-    }
-
-    /* 4. 결과 박스 스타일 */
-    .team-box { border: 1px solid #ddd; padding: 10px; border-radius: 5px; height: 100%; }
-    .duty-title { font-size: 1rem; font-weight: bold; margin-bottom: 5px; }
-    .name-text { font-size: 0.85rem; margin-bottom: 2px; }
+    .main-container { display: flex; gap: 10px; width: 100%; }
+    .team-box { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
+    .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
+    .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
     </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 def load_duty(selected_date):
     filename = f"data/duty_{selected_date.year}_{selected_date.month:02d}.csv"
@@ -57,38 +21,16 @@ def load_duty(selected_date):
     with open(filename, "r", encoding="utf-8") as f:
         return [line.strip().split(",") for line in f]
 
-if 'target_date' not in st.session_state:
-    st.session_state.target_date = datetime.date.today()
-
-st.title("📅 을지 ER 근무")
-
-# --- [해결책] 버튼 가로 배치 (외상/비외상과 똑같은 flex 구조) ---
-# st.columns 대신 직접 div로 묶어 모바일 강제 줄바꿈을 원천 차단합니다.
-st.markdown('<div class="half-split-container">', unsafe_allow_html=True)
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("⬅️ 전날", use_container_width=True):
-        st.session_state.target_date -= datetime.timedelta(days=1)
-        st.rerun()
-with col2:
-    if st.button("다음날 ➡️", use_container_width=True):
-        st.session_state.target_date += datetime.timedelta(days=1)
-        st.rerun()
-st.markdown('</div>', unsafe_allow_html=True)
-
-# 날짜 선택기
-selected_date = st.date_input("날짜 직접 선택", value=st.session_state.target_date)
-if selected_date != st.session_state.target_date:
-    st.session_state.target_date = selected_date
-    st.rerun()
-
-current_date = st.session_state.target_date
-day = current_date.day
-duty_list = load_duty(current_date)
+st.title("📅 ER 근무 조회")
+selected_date = st.date_input("날짜 선택", datetime.date.today())
+day = selected_date.day
+duty_list = load_duty(selected_date)
 
 if duty_list:
-    teams = {"비외상": {"D":[], "E":[], "N":[], "S":[], "hmj":None},
-             "외상": {"D":[], "E":[], "N":[], "S":[], "hmj":None}}
+    teams = {
+        "비외상": {"D": [], "E": [], "N": [], "S": [], "hmj": None},
+        "외상": {"D": [], "E": [], "N": [], "S": [], "hmj": None}
+    }
 
     for row in duty_list[1:]:
         if len(row) > day:
@@ -96,21 +38,47 @@ if duty_list:
             team_key = "외상" if "*" in raw_name else "비외상"
             clean_name = raw_name.replace("*", "")
             target = teams[team_key]
+            
             if work == 'D': target["D"].append(clean_name)
             elif work == 'E': target["E"].append(clean_name)
             elif work == 'N': target["N"].append(clean_name)
             elif work == 'S': target["S"].append(clean_name)
-            if "홍민정" in clean_name and work != 'OF': target["hmj"] = work
+            elif "홍민정" in clean_name and work != 'OF': target["hmj"] = work
 
-    # 결과 박스 출력 (성공했던 flex-container 방식 유지)
-    html_content = "<div class='half-split-container'>"
-    for team_label in ["비외상", "외상"]:
+    # HTML을 이용한 좌우 강제 배치
+    left_html = ""
+    right_html = ""
+
+    for team_label, side_html in [("비외상", "left"), ("외상", "right")]:
         t = teams[team_label]
-        html_content += f"<div class='half-item team-box'><h4>🏥 {team_label}</h4>"
-        for code, label in [("D", "Day"), ("E", "Eve"), ("N", "Night")]:
-            html_content += f"<p class='duty-title {code}'>{label}</p>"
-            if code == "D":
-                if t["S"]: html_content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
+        content = f"<div class='team-box'><h4>🏥 {team_label}</h4>"
+        
+        # Day
+        content += "<p class='duty-title D'>Day</p>"
+        if t["S"]: content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
+        if t["hmj"]: content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
+        
+        # Eve
+        content += "<p class='duty-title E'>Eve</p>"
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
+        
+        # Night
+        content += "<p class='duty-title N'>Night</p>"
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
+        
+        content += "</div>"
+        if side_html == "left": left_html = content
+        else: right_html = content
+
+    # 최종 결과 출력
+    st.markdown(f"""
+        <div class='main-container'>
+            {left_html}
+            {right_html}
+        </div>
+        """, unsafe_allow_html=True)
+내가 작성한 타이틀이랑 앱에 뜨는 타이틀이 왜 달라?                if t["S"]: html_content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
                 if t["hmj"]: html_content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
             html_content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t[code])])
         html_content += "</div>"
