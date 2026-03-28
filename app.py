@@ -25,24 +25,25 @@ def load_duty(selected_date):
 
 st.title("📅 ER 근무 조회")
 
-# --- 날짜 조절 로직 (세션 상태 유지) ---
+# --- 날짜 조절 로직 ---
 if 'target_date' not in st.session_state:
     st.session_state.target_date = datetime.date.today()
 
-# 버튼 클릭 이벤트 처리를 위한 컨테이너
-col_btn1, col_btn2 = st.columns(2)
+# 버튼들을 한 줄에 나란히 배치 (3개 컬럼 사용: 버튼, 여백, 버튼)
+# [1, 0.2, 1] 비율로 주면 가운데에 살짝 틈이 생깁니다.
+col_left, col_mid, col_right = st.columns([1, 0.1, 1])
 
-with col_btn1:
+with col_left:
     if st.button("⬅️ 전날", use_container_width=True):
         st.session_state.target_date -= datetime.timedelta(days=1)
         st.rerun()
 
-with col_btn2:
+with col_right:
     if st.button("다음날 ➡️", use_container_width=True):
         st.session_state.target_date += datetime.timedelta(days=1)
         st.rerun()
 
-# 날짜 선택기는 버튼 아래에 깔끔하게 배치
+# 날짜 선택기 (버튼 아래에 위치)
 selected_date = st.date_input("날짜 직접 선택", value=st.session_state.target_date)
 
 if selected_date != st.session_state.target_date:
@@ -54,7 +55,6 @@ current_date = st.session_state.target_date
 day = current_date.day
 duty_list = load_duty(current_date)
 # -------------------------
-
 if duty_list:
     teams = {
         "비외상": {"D": [], "E": [], "N": [], "S": [], "hmj": None},
