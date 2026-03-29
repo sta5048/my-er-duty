@@ -5,25 +5,6 @@ import os
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
 # CSS: 모바일에서도 가로 배치를 강제하고 폰트 크기를 살짝 조절함
-st.markdown("""
-    <style>
-    .main-container { display: flex; gap: 10px; width: 100%; }
-    .team-box { flex: 1; min-width: 0; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
-    .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
-    .name-text { font-size: 0.9rem; margin-bottom: 2px; }
-    .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
-    div.stButton > button {
-    padding: 12px 0;
-    font-weight: bold;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-    background-color: #f0f2f6;
-}
-div.stButton > button:hover {
-    background-color: #e6e9ef;
-}
-    </style>
-    """, unsafe_allow_html=True)
 
 
 def load_duty(selected_date):
@@ -34,6 +15,24 @@ def load_duty(selected_date):
 
 st.title("📅 ER 근무 조회")
 # --- st.title 바로 아래부터 데이터 로드 전까지 교체 ---
+hidden = st.container()
+with hidden:
+    btn_prev = st.button("prev")
+    btn_today = st.button("today")
+    btn_next = st.button("next")
+
+st.markdown("""
+<div style="display: flex; width: 100%; gap: 2px; margin-bottom: 5px;">
+    <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer;"
+         onclick="window.parent.document.querySelectorAll('button[kind=secondary]')[0].click()">⬅️ 전날</div>
+
+    <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer;"
+         onclick="window.parent.document.querySelectorAll('button[kind=secondary]')[1].click()">오늘</div>
+
+    <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer;"
+         onclick="window.parent.document.querySelectorAll('button[kind=secondary]')[2].click()">담날 ➡️</div>
+</div>
+""", unsafe_allow_html=True)
 
 # 1. 날짜 세션 상태 초기화
 if 'temp_date' not in st.session_state:
