@@ -3,22 +3,7 @@ import datetime
 import os
 
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
-## 고정 코드
-st.markdown("""
-<style>
-.fixed-btn {
-    position: fixed;
-    bottom: 20px;
-    left: 0;
-    width: 100%;
-    z-index: 999;
-    background: white;
-    padding: 10px;
-}
-</style>
-""", unsafe_allow_html=True)
 
-##------------------고정코드---------------
 
 # CSS: 모바일에서도 가로 배치를 강제하고 폰트 크기를 살짝 조절함
 st.markdown("""
@@ -46,15 +31,14 @@ if 'temp_date' not in st.session_state:
     st.session_state.temp_date = datetime.date.today()
 
 # 버튼
-st.markdown('<div class="fixed-btn">', unsafe_allow_html=True)
 
 if st.button("⬅️ 전날", use_container_width=True):
     st.session_state.temp_date -= datetime.timedelta(days=1)
+    st.rerun()
 
 if st.button("➡️ 담날", use_container_width=True):
     st.session_state.temp_date += datetime.timedelta(days=1)
-
-st.markdown('</div>', unsafe_allow_html=True)
+    st.rerun()
 
 selected_date = st.date_input("날짜 선택", st.session_state.temp_date)
 st.session_state.temp_date = selected_date
@@ -124,6 +108,3 @@ if duty_list:
         {right_html}
     </div>
     """, unsafe_allow_html=True)
-
-
-st.markdown("<div style='height:80px'></div>", unsafe_allow_html=True)
