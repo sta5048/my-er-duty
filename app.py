@@ -73,9 +73,6 @@ day = selected_date.day
 duty_list = load_duty(selected_date)
 
 # ---------------------------------------------------------
-selected_date = st.date_input("날짜 선택", datetime.date.today())
-day = selected_date.day
-duty_list = load_duty(selected_date)
 
 if duty_list:
     teams = {
