@@ -28,18 +28,22 @@ st.title("📅 ER 근무 조회")
 if 'temp_date' not in st.session_state:
     st.session_state.temp_date = datetime.date.today()
 
-# 2. 실제 동작을 담당할 숨겨진 버튼들 (레이아웃 보존용)
-# label_visibility를 제거하고 대신 CSS로 완전히 보이지 않게 처리합니다.
-st.markdown("<style>div[data-testid='column'] { display: none; }</style>", unsafe_allow_html=True)
+# 2. 실제 동작용 버튼 (화면에서 완전히 숨김)
+# container를 사용해 감싸고 CSS로 해당 영역을 아예 보이지 않게(display:none) 처리
+hidden_btns = st.container()
+with hidden_btns:
+    st.markdown("<style>div[data-testid='stVerticalBlock'] > div:has(div.hidden-btn-area) { display: none; }</style>", unsafe_allow_html=True)
+    st.markdown('<div class="hidden-btn-area">', unsafe_allow_html=True)
+    col_h1, col_h2, col_h3 = st.columns(3)
+    with col_h1:
+        btn_prev = st.button("prev", key="btn_prev")
+    with col_h2:
+        btn_today = st.button("today", key="btn_today")
+    with col_h3:
+        btn_next = st.button("next", key="btn_next")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-col_h1, col_h2, col_h3 = st.columns(3)
-with col_h1:
-    btn_prev = st.button("prev", key="btn_prev")
-with col_h2:
-    btn_today = st.button("today", key="btn_today")
-with col_h3:
-    btn_next = st.button("next", key="btn_next")
-
+# 3. 버튼 클릭 로직
 if btn_prev:
     st.session_state.temp_date -= datetime.timedelta(days=1)
     st.rerun()
@@ -50,27 +54,25 @@ if btn_next:
     st.session_state.temp_date += datetime.timedelta(days=1)
     st.rerun()
 
-# 3. 화면에 보이는 밀착형 커스텀 버튼 (HTML/JS)
-# gap: 2px로 아주 촘촘하게 설정했습니다.
+# 4. 화면에 보이는 밀착형 커스텀 버튼 (HTML/JS)
+# 이제 이 버튼들이 숨겨진 버튼들을 정확하게 순서대로 클릭합니다.
 st.markdown(f"""
     <div style="display: flex; width: 100%; gap: 2px; margin-bottom: 5px;">
-        <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer;" 
+        <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer; user-select: none;" 
              onclick="document.querySelectorAll('button[kind=\'secondary\']')[0].click()">⬅️ 전날</div>
-        <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer;" 
+        <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer; user-select: none;" 
              onclick="document.querySelectorAll('button[kind=\'secondary\']')[1].click()">오늘</div>
-        <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer;" 
+        <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer; user-select: none;" 
              onclick="document.querySelectorAll('button[kind=\'secondary\']')[2].click()">담날 ➡️</div>
     </div>
     """, unsafe_allow_html=True)
 
-# 4. 날짜 선택창 (에러 없는 label_visibility 적용)
+# 5. 날짜 선택창
 selected_date = st.date_input("날짜 선택", st.session_state.temp_date, label_visibility="collapsed")
 st.session_state.temp_date = selected_date
 
 day = selected_date.day
 duty_list = load_duty(selected_date)
-
-# --- 이후 코드(if duty_list: ...)는 동일 ---
 # --- 이후 코드(if duty_list: ...)는 동일 ---
 
 if duty_list:
