@@ -58,12 +58,6 @@ with col3:
         st.session_state.temp_date += datetime.timedelta(days=1)
         st.rerun()
 
-# 4. 화면에 보이는 밀착형 커스텀 버튼 (HTML/JS)
-
-div.stButton > button:hover {
-    background-color: #e6e9ef;
-}
-
 # 5. 날짜 선택창
 selected_date = st.date_input("날짜 선택", st.session_state.temp_date, label_visibility="collapsed")
 st.session_state.temp_date = selected_date
