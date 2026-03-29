@@ -30,10 +30,10 @@ if 'temp_date' not in st.session_state:
     st.session_state.temp_date = datetime.date.today()
 
 # 버튼
-if st.button("⬅️ 전날"):
+if st.button("⬅️ 전날",  use_container_width=True):
     st.session_state.temp_date -= datetime.timedelta(days=1)
 
-if st.button("➡️ 담날"):
+if st.button("➡️ 담날",  use_container_width=True):
     st.session_state.temp_date += datetime.timedelta(days=1)
 
 selected_date = st.date_input("날짜 선택", st.session_state.temp_date)
