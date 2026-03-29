@@ -30,18 +30,22 @@ if 'temp_date' not in st.session_state:
 
 # 2. 실제 동작용 버튼 (화면에서 완전히 숨김)
 # container를 사용해 감싸고 CSS로 해당 영역을 아예 보이지 않게(display:none) 처리
-hidden_btns = st.container()
-with hidden_btns:
-    st.markdown("<style>div[data-testid='stVerticalBlock'] > div:has(div.hidden-btn-area) { display: none; }</style>", unsafe_allow_html=True)
-    st.markdown('<div class="hidden-btn-area">', unsafe_allow_html=True)
-    col_h1, col_h2, col_h3 = st.columns(3)
-    with col_h1:
-        btn_prev = st.button("prev", key="btn_prev")
-    with col_h2:
-        btn_today = st.button("today", key="btn_today")
-    with col_h3:
-        btn_next = st.button("next", key="btn_next")
-    st.markdown('</div>', unsafe_allow_html=True)
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    if st.button("⬅️ 전날", use_container_width=True):
+        st.session_state.temp_date -= datetime.timedelta(days=1)
+        st.rerun()
+
+with col2:
+    if st.button("오늘", use_container_width=True):
+        st.session_state.temp_date = datetime.date.today()
+        st.rerun()
+
+with col3:
+    if st.button("담날 ➡️", use_container_width=True):
+        st.session_state.temp_date += datetime.timedelta(days=1)
+        st.rerun()
 
 # 3. 버튼 클릭 로직
 if btn_prev:
@@ -55,17 +59,16 @@ if btn_next:
     st.rerun()
 
 # 4. 화면에 보이는 밀착형 커스텀 버튼 (HTML/JS)
-# 이제 이 버튼들이 숨겨진 버튼들을 정확하게 순서대로 클릭합니다.
-st.markdown(f"""
-    <div style="display: flex; width: 100%; gap: 2px; margin-bottom: 5px;">
-        <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer; user-select: none;" 
-             onclick="document.querySelectorAll('button[kind=\'secondary\']')[0].click()">⬅️ 전날</div>
-        <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer; user-select: none;" 
-             onclick="document.querySelectorAll('button[kind=\'secondary\']')[1].click()">오늘</div>
-        <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer; user-select: none;" 
-             onclick="document.querySelectorAll('button[kind=\'secondary\']')[2].click()">담날 ➡️</div>
-    </div>
-    """, unsafe_allow_html=True)
+div.stButton > button {
+    padding: 12px 0;
+    font-weight: bold;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background-color: #f0f2f6;
+}
+div.stButton > button:hover {
+    background-color: #e6e9ef;
+}
 
 # 5. 날짜 선택창
 selected_date = st.date_input("날짜 선택", st.session_state.temp_date, label_visibility="collapsed")
