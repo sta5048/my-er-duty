@@ -15,44 +15,31 @@ def load_duty(selected_date):
 
 st.title("📅 ER 근무 조회")
 # --- st.title 바로 아래부터 데이터 로드 전까지 교체 ---
-hidden = st.container()
-with hidden:
-    btn_prev = st.button("prev")
-    btn_today = st.button("today")
-    btn_next = st.button("next")
+if st.button("⬅️ 전날", use_container_width=True):
+    st.session_state.temp_date -= datetime.timedelta(days=1)
+    st.rerun()
+
+if st.button("➡️ 담날", use_container_width=True):
+    st.session_state.temp_date += datetime.timedelta(days=1)
+    st.rerun()
 
 st.markdown("""
-<div style="display: flex; width: 100%; gap: 2px; margin-bottom: 5px;">
-    <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer;"
-         onclick="window.parent.document.querySelectorAll('button[kind=secondary]')[0].click()">⬅️ 전날</div>
-
-    <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer;"
-         onclick="window.parent.document.querySelectorAll('button[kind=secondary]')[1].click()">오늘</div>
-
-    <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer;"
-         onclick="window.parent.document.querySelectorAll('button[kind=secondary]')[2].click()">담날 ➡️</div>
-</div>
+<style>
+div.stButton > button {
+    padding: 14px 0;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 10px;
+}
+</style>
 """, unsafe_allow_html=True)
-
 # 1. 날짜 세션 상태 초기화
 if 'temp_date' not in st.session_state:
     st.session_state.temp_date = datetime.date.today()
 
 # 2. 실제 동작용 버튼 (화면에서 완전히 숨김)
 # container를 사용해 감싸고 CSS로 해당 영역을 아예 보이지 않게(display:none) 처리
-st.markdown("""
-<div style="display: flex; gap: 4px; margin-bottom: 8px;">
-    <form action="" method="post" style="flex:1;">
-        <button name="action" value="prev" style="width:100%; padding:12px; border-radius:6px; border:1px solid #ddd; background:#f0f2f6; font-weight:bold;">⬅️ 전날</button>
-    </form>
-    <form action="" method="post" style="flex:1;">
-        <button name="action" value="today" style="width:100%; padding:12px; border-radius:6px; border:1px solid #ddd; background:#f0f2f6; font-weight:bold;">오늘</button>
-    </form>
-    <form action="" method="post" style="flex:1;">
-        <button name="action" value="next" style="width:100%; padding:12px; border-radius:6px; border:1px solid #ddd; background:#f0f2f6; font-weight:bold;">담날 ➡️</button>
-    </form>
-</div>
-""", unsafe_allow_html=True)
+
 # 5. 날짜 선택창
 selected_date = st.date_input("날짜 선택", st.session_state.temp_date, label_visibility="collapsed")
 st.session_state.temp_date = selected_date
