@@ -58,25 +58,8 @@ with col3:
         st.session_state.temp_date += datetime.timedelta(days=1)
         st.rerun()
 
-# 3. 버튼 클릭 로직
-if btn_prev:
-    st.session_state.temp_date -= datetime.timedelta(days=1)
-    st.rerun()
-if btn_today:
-    st.session_state.temp_date = datetime.date.today()
-    st.rerun()
-if btn_next:
-    st.session_state.temp_date += datetime.timedelta(days=1)
-    st.rerun()
-
 # 4. 화면에 보이는 밀착형 커스텀 버튼 (HTML/JS)
-div.stButton > button {
-    padding: 12px 0;
-    font-weight: bold;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-    background-color: #f0f2f6;
-}
+
 div.stButton > button:hover {
     background-color: #e6e9ef;
 }
