@@ -22,30 +22,38 @@ def load_duty(selected_date):
         return [line.strip().split(",") for line in f]
 
 st.title("📅 ER 근무 조회")
-# 1. CSS: 모바일에서 st.columns가 세로로 꺾이는 것을 절대적으로 방어
+# 1. 모바일 가로 유지 및 간격 최적화 CSS
 st.markdown("""
     <style>
-    /* 상위 컨테이너 레이아웃 강제 고정 */
+    /* 버튼들이 들어가는 한 줄(Row)의 간격을 아주 좁게 설정 */
     [data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        align-items: center !important;
-        gap: 0.5rem !important;
+        gap: 5px !important; /* 여기 숫자를 줄이면 더 붙습니다 (기존은 보통 16px) */
     }
-    /* 개별 컬럼 너비 강제 지정 */
+    
+    /* 각 컬럼의 불필요한 여백 제거 */
     [data-testid="column"] {
-        width: 33.33% !important;
-        flex: 1 1 33.33% !important;
+        flex: 1 !important;
         min-width: 0px !important;
+        padding: 0px !important;
     }
-    /* 버튼 스타일 최적화 */
+
+    /* 버튼 디자인: 테두리를 없애고 배경색을 살짝 진하게 */
     div.stButton > button {
         width: 100%;
         padding: 8px 0px;
         font-size: 14px !important;
-        border-radius: 8px;
-        white-space: nowrap; /* 글자 줄바꿈 방지 */
+        background-color: #f8f9fa;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        margin: 0px !important;
+    }
+    
+    /* 날짜 입력창 위쪽 여백 줄이기 */
+    .stDateInput {
+        margin-top: -15px;
     }
     </style>
     """, unsafe_allow_html=True)
