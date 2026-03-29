@@ -41,23 +41,19 @@ if 'temp_date' not in st.session_state:
 
 # 2. 실제 동작용 버튼 (화면에서 완전히 숨김)
 # container를 사용해 감싸고 CSS로 해당 영역을 아예 보이지 않게(display:none) 처리
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    if st.button("⬅️ 전날", use_container_width=True):
-        st.session_state.temp_date -= datetime.timedelta(days=1)
-        st.rerun()
-
-with col2:
-    if st.button("오늘", use_container_width=True):
-        st.session_state.temp_date = datetime.date.today()
-        st.rerun()
-
-with col3:
-    if st.button("담날 ➡️", use_container_width=True):
-        st.session_state.temp_date += datetime.timedelta(days=1)
-        st.rerun()
-
+st.markdown("""
+<div style="display: flex; gap: 4px; margin-bottom: 8px;">
+    <form action="" method="post" style="flex:1;">
+        <button name="action" value="prev" style="width:100%; padding:12px; border-radius:6px; border:1px solid #ddd; background:#f0f2f6; font-weight:bold;">⬅️ 전날</button>
+    </form>
+    <form action="" method="post" style="flex:1;">
+        <button name="action" value="today" style="width:100%; padding:12px; border-radius:6px; border:1px solid #ddd; background:#f0f2f6; font-weight:bold;">오늘</button>
+    </form>
+    <form action="" method="post" style="flex:1;">
+        <button name="action" value="next" style="width:100%; padding:12px; border-radius:6px; border:1px solid #ddd; background:#f0f2f6; font-weight:bold;">담날 ➡️</button>
+    </form>
+</div>
+""", unsafe_allow_html=True)
 # 5. 날짜 선택창
 selected_date = st.date_input("날짜 선택", st.session_state.temp_date, label_visibility="collapsed")
 st.session_state.temp_date = selected_date
