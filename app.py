@@ -22,56 +22,60 @@ def load_duty(selected_date):
         return [line.strip().split(",") for line in f]
 
 st.title("📅 ER 근무 조회")
-# 1. 날짜 세션 상태 초기화
+# 1. 날짜 세션 상태 초기화 (기존 동일)
 if 'temp_date' not in st.session_state:
     st.session_state.temp_date = datetime.date.today()
 
-# 2. 실제 동작용 버튼 (화면에서 완전히 숨김)
-# CSS로 'stButton' 중 특정 키를 가진 녀석들을 통째로 안 보이게 만듭니다.
+# 2. CSS: 버튼 3개를 무조건 가로로 붙이고 여백 없애기
 st.markdown("""
     <style>
-    div.stButton > button[aria-label="prev"], 
-    div.stButton > button[aria-label="today"], 
-    div.stButton > button[aria-label="next"] {
-        display: none;
+    /* 버튼들을 감싸는 한 줄 전체 설정 */
+    [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 2px !important; /* 버튼 사이 간격 2px로 밀착 */
     }
+    
+    /* 각 버튼이 들어가는 칸(컬럼) 설정 */
+    [data-testid="column"] {
+        flex: 1 !important;
+        min-width: 0px !important;
+        padding: 0px !important;
+    }
+
+    /* 버튼 자체의 디자인 개조 */
+    div.stButton > button {
+        width: 100% !important;
+        padding: 12px 0px !important;
+        font-size: 15px !important;
+        font-weight: bold !important;
+        background-color: #f0f2f6 !important;
+        border: 1px solid #ddd !important;
+        border-radius: 6px !important;
+    }
+    
+    /* 날짜 입력창 위 여백 제거 */
+    .stDateInput { margin-top: -10px; }
     </style>
     """, unsafe_allow_html=True)
 
-# 숨겨진 진짜 버튼들
-col_h1, col_h2, col_h3 = st.columns(3)
-with col_h1:
-    btn_prev = st.button("prev")
-with col_h2:
-    btn_today = st.button("today")
-with col_h3:
-    btn_next = st.button("next")
+# 3. 버튼 3개 배치 (진짜 버튼을 직접 사용)
+cols = st.columns(3)
+with cols[0]:
+    if st.button("⬅️ 전날"):
+        st.session_state.temp_date -= datetime.timedelta(days=1)
+        st.rerun()
+with cols[1]:
+    if st.button("오늘"):
+        st.session_state.temp_date = datetime.date.today()
+        st.rerun()
+with cols[2]:
+    if st.button("담날 ➡️"):
+        st.session_state.temp_date += datetime.timedelta(days=1)
+        st.rerun()
 
-# 3. 버튼 클릭 로직
-if btn_prev:
-    st.session_state.temp_date -= datetime.timedelta(days=1)
-    st.rerun()
-if btn_today:
-    st.session_state.temp_date = datetime.date.today()
-    st.rerun()
-if btn_next:
-    st.session_state.temp_date += datetime.timedelta(days=1)
-    st.rerun()
-
-# 4. 화면에 보이는 밀착형 커스텀 버튼 (강력한 매칭 방식)
-# 버튼의 텍스트(innerText)를 찾아서 정확히 클릭하게 수정했습니다.
-st.markdown(f"""
-    <div style="display: flex; width: 100%; gap: 2px; margin-bottom: 5px;">
-        <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer; user-select: none;" 
-             onclick="Array.from(document.querySelectorAll('button')).find(el => el.innerText === 'prev').click()">⬅️ 전날</div>
-        <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer; user-select: none;" 
-             onclick="Array.from(document.querySelectorAll('button')).find(el => el.innerText === 'today').click()">오늘</div>
-        <div style="flex: 1; padding: 12px 0; text-align: center; background-color: #f0f2f6; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; cursor: pointer; user-select: none;" 
-             onclick="Array.from(document.querySelectorAll('button')).find(el => el.innerText === 'next').click()">담날 ➡️</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# 5. 날짜 선택창
+# 4. 날짜 선택창
 selected_date = st.date_input("날짜 선택", st.session_state.temp_date, label_visibility="collapsed")
 st.session_state.temp_date = selected_date
 
