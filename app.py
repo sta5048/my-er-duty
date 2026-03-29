@@ -50,17 +50,51 @@ if 'temp_date' not in st.session_state:
     st.session_state.temp_date = datetime.date.today()
 
 # 버튼 3개를 가로로 배치
-col1, col2, col3 = st.columns(3)
+# 1. 세션 상태 초기화 (기존 코드 유지)
+if 'temp_date' not in st.session_state:
+    st.session_state.temp_date = datetime.date.today()
 
-with col1:
+# 2. 버튼 세 개를 강제로 가로 배치하는 로직
+# st.columns 대신 직접 3개의 컬럼을 만들고, CSS로 flex-direction을 유지합니다.
+cols = st.columns(3)
+
+# CSS 추가: 화면이 아무리 작아도(min-width: 0) 세로로 꺾이지 않게 함
+st.markdown("""
+    <style>
+    [data-testid="column"] {
+        width: calc(33.3333% - 10px) !important;
+        flex: 1 1 calc(33.3333% - 10px) !important;
+        min-width: 0px !important;
+    }
+    div.stButton > button {
+        width: 100%;
+        padding: 10px 0px;
+        font-size: 14px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+with cols[0]:
     if st.button("⬅️ 전날"):
         st.session_state.temp_date -= datetime.timedelta(days=1)
-with col2:
+        st.rerun()
+
+with cols[1]:
     if st.button("오늘"):
         st.session_state.temp_date = datetime.date.today()
-with col3:
-    if st.button("다음날 ➡️"):
+        st.rerun()
+
+with cols[2]:
+    if st.button("담날 ➡️"):
         st.session_state.temp_date += datetime.timedelta(days=1)
+        st.rerun()
+
+# 3. 날짜 입력창 및 변수 설정 (기존 코드 유지)
+selected_date = st.date_input("날짜 선택", st.session_state.temp_date)
+st.session_state.temp_date = selected_date
+
+day = selected_date.day
+duty_list = load_duty(selected_date)
 
 # 3. 날짜 입력 및 데이터 로드 (기존 변수명 유지)
 # 버튼으로 조절된 날짜가 date_input에 반영됩니다.
