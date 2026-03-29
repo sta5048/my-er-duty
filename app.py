@@ -39,6 +39,8 @@ if st.button("➡️ 담날"):
 selected_date = st.date_input("날짜 선택", st.session_state.temp_date)
 st.session_state.temp_date = selected_date
 
+day = selected_date.day
+
 duty_list = load_duty(selected_date)
 
 if duty_list:
