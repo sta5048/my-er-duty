@@ -22,91 +22,53 @@ def load_duty(selected_date):
         return [line.strip().split(",") for line in f]
 
 st.title("📅 ER 근무 조회")
-
-# --- 아래 코드를 st.title("📅 ER 근무 조회") 바로 밑에 추가하세요 ---
-# 1. 버튼 가로 배치를 위한 CSS (모바일 강제 가로 정렬)
+# 1. 모바일 강제 가로 배치 및 버튼 스타일 CSS
 st.markdown("""
     <style>
-    .nav-button-container {
-        display: flex;
-        gap: 5px;
-        margin-bottom: 10px;
-    }
-    .nav-button-container > div {
-        flex: 1;
-    }
-    /* 버튼 텍스트 크기 조절 (작은 화면 대응) */
-    div.stButton > button {
-        width: 100%;
-        padding: 5px 0px;
-        font-size: 0.8rem !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# 2. 버튼 클릭 이벤트 처리
-# 세션 상태를 쓰지만, 새로고침 시 초기화되도록 기본값을 매번 today로 설정
-if 'temp_date' not in st.session_state:
-    st.session_state.temp_date = datetime.date.today()
-
-# 버튼 3개를 가로로 배치
-# 1. 세션 상태 초기화 (기존 코드 유지)
-if 'temp_date' not in st.session_state:
-    st.session_state.temp_date = datetime.date.today()
-
-# 2. 버튼 세 개를 강제로 가로 배치하는 로직
-# st.columns 대신 직접 3개의 컬럼을 만들고, CSS로 flex-direction을 유지합니다.
-cols = st.columns(3)
-
-# CSS 추가: 화면이 아무리 작아도(min-width: 0) 세로로 꺾이지 않게 함
-st.markdown("""
-    <style>
+    /* 컬럼 컨테이너 설정: 모바일에서도 가로로 유지 */
     [data-testid="column"] {
-        width: calc(33.3333% - 10px) !important;
-        flex: 1 1 calc(33.3333% - 10px) !important;
+        width: 33.33% !important;
+        flex: 1 1 33.33% !important;
         min-width: 0px !important;
     }
+    /* 버튼 내부 스타일 */
     div.stButton > button {
         width: 100%;
-        padding: 10px 0px;
+        padding: 10px 2px;
         font-size: 14px !important;
+        border-radius: 8px;
     }
+    /* 날짜 입력창 라벨 숨기기 (공간 절약) */
+    div[data-testid="stDateInput"] label { display: none; }
     </style>
     """, unsafe_allow_html=True)
 
+# 2. 날짜 세션 상태 관리 (새로고침 시 오늘로 리셋)
+if 'temp_date' not in st.session_state:
+    st.session_state.temp_date = datetime.date.today()
+
+# 3. 네비게이션 버튼 (⬅️ 전날 | 오늘 | 담날 ➡️)
+cols = st.columns(3)
 with cols[0]:
     if st.button("⬅️ 전날"):
         st.session_state.temp_date -= datetime.timedelta(days=1)
         st.rerun()
-
 with cols[1]:
     if st.button("오늘"):
         st.session_state.temp_date = datetime.date.today()
         st.rerun()
-
 with cols[2]:
     if st.button("담날 ➡️"):
         st.session_state.temp_date += datetime.timedelta(days=1)
         st.rerun()
 
-# 3. 날짜 입력창 및 변수 설정 (기존 코드 유지)
+# 4. 날짜 입력 (에러 방지를 위해 딱 한 번만 선언!)
 selected_date = st.date_input("날짜 선택", st.session_state.temp_date)
-st.session_state.temp_date = selected_date
+st.session_state.temp_date = selected_date # 달력 조절 시 세션 갱신
 
+# 5. 데이터 로드 변수 설정
 day = selected_date.day
 duty_list = load_duty(selected_date)
-
-# 3. 날짜 입력 및 데이터 로드 (기존 변수명 유지)
-# 버튼으로 조절된 날짜가 date_input에 반영됩니다.
-selected_date = st.date_input("날짜 선택", st.session_state.temp_date)
-
-# 사용자가 달력에서 직접 날짜를 바꿨을 때를 위해 세션 상태 동기화
-st.session_state.temp_date = selected_date
-
-day = selected_date.day
-duty_list = load_duty(selected_date)
-
-# ---------------------------------------------------------
 
 if duty_list:
     teams = {
