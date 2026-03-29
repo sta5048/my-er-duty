@@ -16,26 +16,24 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 def load_duty(selected_date):
-    filename = f"data/duty_{selected_date.year}_{selected_date.month:02d}.csv"
+    filename = f"data/duty_{selected_date.year}_{selected_date.month:02d}.csv"
     if not os.path.exists(filename): return None
     with open(filename, "r", encoding="utf-8") as f:
         return [line.strip().split(",") for line in f]
 
 st.title("📅 을지 ER 근무")
-# 날짜 상태 저장    
-st.session_state.temp_date = datetime.date.today()
+if 'temp_date' not in st.session_state:
+    st.session_state.temp_date = datetime.date.today()
 
-# 전날 버튼
-if st.button("⬅️ 전날", use_container_width=True):
+# 버튼
+if st.button("⬅️ 전날"):
     st.session_state.temp_date -= datetime.timedelta(days=1)
-    st.rerun()
 
-# 담날 버튼
-if st.button("➡️ 담날", use_container_width=True):
+if st.button("➡️ 담날"):
     st.session_state.temp_date += datetime.timedelta(days=1)
-    st.rerun()
-selected_date = st.date_input("날짜 선택", datetime.date.today())
-day = selected_date.day
+
+selected_date = st.date_input("날짜 선택", st.session_state.temp_date)
+st.session_state.temp_date = selected_date
 duty_list = load_duty(selected_date)
 
 if duty_list:
