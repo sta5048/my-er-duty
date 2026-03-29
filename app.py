@@ -22,85 +22,59 @@ def load_duty(selected_date):
         return [line.strip().split(",") for line in f]
 
 st.title("📅 ER 근무 조회")
-# --- st.title("📅 ER 근무 조회") 바로 아래에 있던 기존 CSS 및 버튼 코드를 아래로 교체 ---
-
-# 1. 날짜 조절 세션 상태 (기존 유지)
-if 'temp_date' not in st.session_state:
-    st.session_state.temp_date = datetime.date.today()
-
-# 2. 강제 가로 배치를 위한 완전한 HTML 버튼 & CSS
+# 1. CSS: 모바일에서 st.columns가 세로로 꺾이는 것을 절대적으로 방어
 st.markdown("""
     <style>
-    /* 전체 버튼 컨테이너 설정: 무조건 가로로 나열 */
-    .nav-btn-container {
-        display: flex;
+    /* 상위 컨테이너 레이아웃 강제 고정 */
+    [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+    }
+    /* 개별 컬럼 너비 강제 지정 */
+    [data-testid="column"] {
+        width: 33.33% !important;
+        flex: 1 1 33.33% !important;
+        min-width: 0px !important;
+    }
+    /* 버튼 스타일 최적화 */
+    div.stButton > button {
         width: 100%;
-        gap: 8px; /* 버튼 사이 간격 */
-        margin-bottom: 15px;
-    }
-    
-    /* 각 버튼 스타일: 크기 동일, 가운데 정렬 */
-    .nav-btn {
-        flex: 1; /* 3등분 */
-        text-align: center;
-        padding: 12px 5px;
-        background-color: #f0f2f6; /* 버튼 배경색 */
-        border: 1px solid #dcdde1;
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: bold;
-        color: #31333F;
-        text-decoration: none; /* 링크 밑줄 제거 */
-        display: inline-block;
-    }
-
-    /* 버튼 호버/클릭 효과 */
-    .nav-btn:hover {
-        background-color: #e0e2e6;
-    }
-    .nav-btn:active {
-        background-color: #d0d2d6;
-        transform: translateY(1px); /* 클릭 느낌 */
+        padding: 8px 0px;
+        font-size: 14px !important;
+        border-radius: 8px;
+        white-space: nowrap; /* 글자 줄바꿈 방지 */
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. HTML 버튼 링크 생성 (클릭 시 쿼리 파라미터를 통해 날짜 변경)
-# 스트림릿에서 직접 HTML 클릭을 날짜 변경으로 연결하려면 쿼리 파라미터가 가장 확실합니다.
-prev_date_str = (st.session_state.temp_date - datetime.timedelta(days=1)).isoformat()
-today_date_str = datetime.date.today().isoformat()
-next_date_str = (st.session_state.temp_date + datetime.timedelta(days=1)).isoformat()
+# 2. 날짜 세션 상태 (새로고침 시 오늘로 리셋)
+if 'temp_date' not in st.session_state:
+    st.session_state.temp_date = datetime.date.today()
 
-# HTML 렌더링
-st.markdown(f"""
-    <div class="nav-btn-container">
-        <a href="?date={prev_date_str}" class="nav-btn" target="_self">⬅️ 전날</a>
-        <a href="?date={today_date_str}" class="nav-btn" target="_self">오늘</a>
-        <a href="?date={next_date_str}" class="nav-btn" target="_self">담날 ➡️</a>
-    </div>
-    """, unsafe_allow_html=True)
+# 3. 버튼 배치 (st.button 사용으로 매끄러운 전환)
+cols = st.columns(3)
+with cols[0]:
+    if st.button("⬅️ 전날"):
+        st.session_state.temp_date -= datetime.timedelta(days=1)
+        st.rerun()
+with cols[1]:
+    if st.button("오늘"):
+        st.session_state.temp_date = datetime.date.today()
+        st.rerun()
+with cols[2]:
+    if st.button("담날 ➡️"):
+        st.session_state.temp_date += datetime.timedelta(days=1)
+        st.rerun()
 
-# 4. URL 쿼리 파라미터에서 날짜 읽어오기
-query_params = st.query_params
-if "date" in query_params:
-    try:
-        new_date = datetime.date.fromisoformat(query_params["date"])
-        # URL의 날짜와 세션의 날짜가 다를 때만 갱신 (무한 루프 방지)
-        if new_date != st.session_state.temp_date:
-            st.session_state.temp_date = new_date
-            st.rerun()
-    except ValueError:
-        pass # 잘못된 날짜 형식은 무시
-
-# 5. 날짜 입력창 및 변수 설정 (기존 코드 유지)
+# 4. 날짜 입력창 연동
 selected_date = st.date_input("날짜 선택", st.session_state.temp_date)
 st.session_state.temp_date = selected_date
 
 day = selected_date.day
 duty_list = load_duty(selected_date)
-
-# --- 이후 코드(if duty_list: ...)는 기존대로 유지 ---
 
 if duty_list:
     teams = {
