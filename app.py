@@ -18,6 +18,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+@st.cache_data
 def load_duty(selected_date):
     filename = f"data/duty_{selected_date.year}_{selected_date.month:02d}.csv"
     if not os.path.exists(filename):
