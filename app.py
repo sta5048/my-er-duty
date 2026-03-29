@@ -15,6 +15,9 @@ st.markdown("""
 .D { color: #28a745; }
 .E { color: #fd7e14; }
 .N { color: #dc3545; }
+.name-D { background-color: #e6f4ea; padding: 4px; border-radius: 5px; }
+.name-E { background-color: #fff3e0; padding: 4px; border-radius: 5px; }
+.name-N { background-color: #fdecea; padding: 4px; border-radius: 5px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -86,16 +89,16 @@ if duty_list:
             content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
         if t["hmj"]:
             content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
-        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
+        content += "".join([f"<p class='name-text name-D'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
 
         # Eve
         content += "<p class='duty-title E'>Eve</p>"
-        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
+        content += "".join([f"<p class='name-text name-E'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
 
         # Night
         content += "<p class='duty-title N'>Night</p>"
-        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
-
+        content += "".join([f"<p class='name-text name-N'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
+        
         content += "</div>"
         if side_html == "left":
             left_html = content
