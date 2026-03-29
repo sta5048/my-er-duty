@@ -22,67 +22,74 @@ def load_duty(selected_date):
         return [line.strip().split(",") for line in f]
 
 st.title("📅 ER 근무 조회")
-# 1. 모바일 가로 유지 및 간격 최적화 CSS
-st.markdown("""
-    <style>
-    /* 버튼들이 들어가는 한 줄(Row)의 간격을 아주 좁게 설정 */
-    [data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 5px !important; /* 여기 숫자를 줄이면 더 붙습니다 (기존은 보통 16px) */
-    }
-    
-    /* 각 컬럼의 불필요한 여백 제거 */
-    [data-testid="column"] {
-        flex: 1 !important;
-        min-width: 0px !important;
-        padding: 0px !important;
-    }
+# --- st.title 바로 아래부터 데이터 로드 전까지 교체 ---
 
-    /* 버튼 디자인: 테두리를 없애고 배경색을 살짝 진하게 */
-    div.stButton > button {
-        width: 100%;
-        padding: 8px 0px;
-        font-size: 14px !important;
-        background-color: #f8f9fa;
-        border: 1px solid #eee;
-        border-radius: 6px;
-        margin: 0px !important;
-    }
-    
-    /* 날짜 입력창 위쪽 여백 줄이기 */
-    .stDateInput {
-        margin-top: -15px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# 2. 날짜 세션 상태 (새로고침 시 오늘로 리셋)
+# 1. 날짜 세션 상태 초기화
 if 'temp_date' not in st.session_state:
     st.session_state.temp_date = datetime.date.today()
 
-# 3. 버튼 배치 (st.button 사용으로 매끄러운 전환)
-cols = st.columns(3)
-with cols[0]:
-    if st.button("⬅️ 전날"):
-        st.session_state.temp_date -= datetime.timedelta(days=1)
-        st.rerun()
-with cols[1]:
-    if st.button("오늘"):
-        st.session_state.temp_date = datetime.date.today()
-        st.rerun()
-with cols[2]:
-    if st.button("담날 ➡️"):
-        st.session_state.temp_date += datetime.timedelta(days=1)
-        st.rerun()
+# 2. 버튼 클릭 로직 처리 (Hidden 버튼 연동)
+# HTML 버튼이 눌렸을 때 실제로 동작할 투명 스트림릿 버튼들입니다.
+col_h1, col_h2, col_h3 = st.columns(3)
+with col_h1:
+    btn_prev = st.button("prev", key="btn_prev", help="이전", label_visibility="collapsed")
+with col_h2:
+    btn_today = st.button("today", key="btn_today", help="오늘", label_visibility="collapsed")
+with col_h3:
+    btn_next = st.button("next", key="btn_next", help="다음", label_visibility="collapsed")
 
-# 4. 날짜 입력창 연동
-selected_date = st.date_input("날짜 선택", st.session_state.temp_date)
+if btn_prev:
+    st.session_state.temp_date -= datetime.timedelta(days=1)
+    st.rerun()
+if btn_today:
+    st.session_state.temp_date = datetime.date.today()
+    st.rerun()
+if btn_next:
+    st.session_state.temp_date += datetime.timedelta(days=1)
+    st.rerun()
+
+# 3. 화면에 보일 가로 밀착 버튼 (HTML/CSS)
+st.markdown(f"""
+    <style>
+    /* 실제 스트림릿 버튼 숨기기 */
+    div[data-testid="column"] {{ display: none; }}
+    
+    .custom-btn-container {{
+        display: flex;
+        width: 100%;
+        gap: 2px; /* 버튼 사이 간격 - 여기서 미세조절 가능! */
+        margin-bottom: 5px;
+    }}
+    .custom-btn {{
+        flex: 1;
+        padding: 10px 0;
+        text-align: center;
+        background-color: #f0f2f6;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        user-select: none;
+    }}
+    .custom-btn:active {{ background-color: #d1d5db; }}
+    </style>
+
+    <div class="custom-btn-container">
+        <div class="custom-btn" onclick="document.querySelectorAll('button[kind=\'secondary\']')[0].click()">⬅️ 전날</div>
+        <div class="custom-btn" onclick="document.querySelectorAll('button[kind=\'secondary\']')[1].click()">오늘</div>
+        <div class="custom-btn" onclick="document.querySelectorAll('button[kind=\'secondary\']')[2].click()">담날 ➡️</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# 4. 날짜 선택창 (버튼 바로 아래 배치)
+selected_date = st.date_input("날짜 선택", st.session_state.temp_date, label_visibility="collapsed")
 st.session_state.temp_date = selected_date
 
 day = selected_date.day
 duty_list = load_duty(selected_date)
+
+# --- 이후 코드(if duty_list: ...)는 동일 ---
 
 if duty_list:
     teams = {
