@@ -22,6 +22,48 @@ def load_duty(selected_date):
         return [line.strip().split(",") for line in f]
 
 st.title("📅 ER 근무 조회")
+
+# --- 아래 코드를 st.title("📅 ER 근무 조회") 바로 밑에 추가하세요 ---
+
+# 1. 날짜 조절을 위한 세션 상태 초기화
+if 'selected_date' not in st.session_state:
+    st.session_state.selected_date = datetime.date.today()
+
+# 2. 버튼 가로 배치를 위한 CSS (모바일 대응)
+st.markdown("""
+    <style>
+    .button-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .button-row > div {
+        flex: 1; /* 버튼이 동일한 비율로 가로를 꽉 채움 */
+    }
+    div.stButton > button {
+        width: 100%; /* 버튼 내부 너비 100% */
+        border-radius: 10px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# 3. 전날/다음날 버튼 구현
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("⬅️ 전날"):
+        st.session_state.selected_date -= datetime.timedelta(days=1)
+        st.rerun()
+
+with col2:
+    if st.button("다음날 ➡️"):
+        st.session_state.selected_date += datetime.timedelta(days=1)
+        st.rerun()
+
+# 4. 기존 selected_date 변수를 세션 상태와 연동 (기존 코드가 이 변수를 사용함)
+# date_input의 값을 세션 상태값으로 설정
+selected_date = st.date_input("날짜 선택", st.session_state.selected_date)
+st.session_state.selected_date = selected_date
+# ---------------------------------------------------------
 selected_date = st.date_input("날짜 선택", datetime.date.today())
 day = selected_date.day
 duty_list = load_duty(selected_date)
