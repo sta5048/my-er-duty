@@ -24,45 +24,54 @@ def load_duty(selected_date):
 st.title("📅 ER 근무 조회")
 
 # --- 아래 코드를 st.title("📅 ER 근무 조회") 바로 밑에 추가하세요 ---
-
-# 1. 날짜 조절을 위한 세션 상태 초기화
-if 'selected_date' not in st.session_state:
-    st.session_state.selected_date = datetime.date.today()
-
-# 2. 버튼 가로 배치를 위한 CSS (모바일 대응)
+# 1. 버튼 가로 배치를 위한 CSS (모바일 강제 가로 정렬)
 st.markdown("""
     <style>
-    .button-row {
+    .nav-button-container {
         display: flex;
-        gap: 10px;
-        margin-bottom: 15px;
+        gap: 5px;
+        margin-bottom: 10px;
     }
-    .button-row > div {
-        flex: 1; /* 버튼이 동일한 비율로 가로를 꽉 채움 */
+    .nav-button-container > div {
+        flex: 1;
     }
+    /* 버튼 텍스트 크기 조절 (작은 화면 대응) */
     div.stButton > button {
-        width: 100%; /* 버튼 내부 너비 100% */
-        border-radius: 10px;
+        width: 100%;
+        padding: 5px 0px;
+        font-size: 0.8rem !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. 전날/다음날 버튼 구현
-col1, col2 = st.columns(2)
+# 2. 버튼 클릭 이벤트 처리
+# 세션 상태를 쓰지만, 새로고침 시 초기화되도록 기본값을 매번 today로 설정
+if 'temp_date' not in st.session_state:
+    st.session_state.temp_date = datetime.date.today()
+
+# 버튼 3개를 가로로 배치
+col1, col2, col3 = st.columns(3)
+
 with col1:
     if st.button("⬅️ 전날"):
-        st.session_state.selected_date -= datetime.timedelta(days=1)
-        st.rerun()
-
+        st.session_state.temp_date -= datetime.timedelta(days=1)
 with col2:
+    if st.button("오늘"):
+        st.session_state.temp_date = datetime.date.today()
+with col3:
     if st.button("다음날 ➡️"):
-        st.session_state.selected_date += datetime.timedelta(days=1)
-        st.rerun()
+        st.session_state.temp_date += datetime.timedelta(days=1)
 
-# 4. 기존 selected_date 변수를 세션 상태와 연동 (기존 코드가 이 변수를 사용함)
-# date_input의 값을 세션 상태값으로 설정
-selected_date = st.date_input("날짜 선택", st.session_state.selected_date)
-st.session_state.selected_date = selected_date
+# 3. 날짜 입력 및 데이터 로드 (기존 변수명 유지)
+# 버튼으로 조절된 날짜가 date_input에 반영됩니다.
+selected_date = st.date_input("날짜 선택", st.session_state.temp_date)
+
+# 사용자가 달력에서 직접 날짜를 바꿨을 때를 위해 세션 상태 동기화
+st.session_state.temp_date = selected_date
+
+day = selected_date.day
+duty_list = load_duty(selected_date)
+
 # ---------------------------------------------------------
 selected_date = st.date_input("날짜 선택", datetime.date.today())
 day = selected_date.day
