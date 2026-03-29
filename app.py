@@ -12,8 +12,19 @@ st.markdown("""
     .duty-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
     .name-text { font-size: 0.9rem; margin-bottom: 2px; }
     .D { color: #28a745; } .E { color: #fd7e14; } .N { color: #dc3545; }
+    div.stButton > button {
+    padding: 12px 0;
+    font-weight: bold;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background-color: #f0f2f6;
+}
+div.stButton > button:hover {
+    background-color: #e6e9ef;
+}
     </style>
     """, unsafe_allow_html=True)
+
 
 def load_duty(selected_date):
     filename = f"data/duty_{selected_date.year}_{selected_date.month:02d}.csv"
