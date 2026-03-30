@@ -15,9 +15,9 @@ st.markdown("""
 .D { color: #28a745; }
 .E { color: #fd7e14; }
 .N { color: #dc3545; }
-.name-D { background-color: #e6f4ea; padding: 4px; border-radius: 5px; }
-.name-E { background-color: #fff3e0; padding: 4px; border-radius: 5px; }
-.name-N { background-color: #fdecea; padding: 4px; border-radius: 5px; }
+.box-D { background-color: #e6f4ea; padding: 8px; border-radius: 8px; margin-bottom: 8px; }
+.box-E { background-color: #fff3e0; padding: 8px; border-radius: 8px; margin-bottom: 8px; }
+.box-N { background-color: #fdecea; padding: 8px; border-radius: 8px; margin-bottom: 8px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -84,20 +84,30 @@ if duty_list:
         content = f"<div class='team-box'><h4>🏥 {team_label}</h4>"
 
         # Day
+        content += "<div class='box-D'>"
         content += "<p class='duty-title D'>Day</p>"
+
         if t["S"]:
             content += "".join([f"<p class='name-text'>🚩<b>S:{s}</b></p>" for s in t["S"]])
+
         if t["hmj"]:
             content += f"<p class='name-text'>✨<b>홍민정:{t['hmj']}</b></p>"
-        content += "".join([f"<p class='name-text name-D'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
+
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["D"])])
+
+        content += "</div>"
 
         # Eve
+        content += "<div class='box-E'>"
         content += "<p class='duty-title E'>Eve</p>"
-        content += "".join([f"<p class='name-text name-E'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
-
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["E"])])
+        content += "</div>"
+        
         # Night
+        content += "<div class='box-N'>"
         content += "<p class='duty-title N'>Night</p>"
-        content += "".join([f"<p class='name-text name-N'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
+        content += "".join([f"<p class='name-text'>{i+1}. {n}</p>" for i, n in enumerate(t["N"])])
+        content += "</div>"
         
         content += "</div>"
         if side_html == "left":
