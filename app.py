@@ -21,12 +21,14 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-#@st.cache_data
-def load_duty(selected_date):
+@st.cache_data
+def load_duty(selected_date, mtime):
     filename = f"data/duty_{selected_date.year}_{selected_date.month:02d}.csv"
+
     if not os.path.exists(filename):
         return None
-    with open(filename, "r", encoding="utf-8") as f:
+
+    with open(filename, "r", encoding="utf-8-sig") as f:
         return [line.strip().split(",") for line in f]
 
 st.title("📅 을지 ER 근무")
@@ -49,7 +51,12 @@ st.session_state.temp_date = selected_date
 
 day = selected_date.day
 
-duty_list = load_duty(selected_date)
+filename = f"data/duty_{selected_date.year}_{selected_date.month:02d}.csv"
+
+mtime = os.path.getmtime(filename) if os.path.exists(filename) else 0
+
+duty_list = load_duty(selected_date, mtime)
+
 
 if duty_list:
     teams = {
