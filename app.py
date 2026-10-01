@@ -5,7 +5,7 @@ import os
 st.set_page_config(page_title="을지 응급실 근무", layout="wide")
 
 
-# CSS: 모바일에서도 가로 배치를 강제하고 폰트 크기를 살짝 조절함
+# CSS
 st.markdown("""
 <style>
 .main-container { display: flex; gap: 10px; width: 100%; }
